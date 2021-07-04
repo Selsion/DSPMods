@@ -3,6 +3,7 @@ using System.IO;
 using HarmonyLib;
 using BepInEx;
 using UnityEngine;
+using BepInEx.Configuration;
 
 namespace DSPOptimizations
 {
@@ -14,9 +15,15 @@ namespace DSPOptimizations
         public const string MOD_NAME = "DSPOptimizations";
         public const string MOD_VERSION = "0.1.0";
 
+        public static ConfigEntry<bool> writeOptimizedSave;
+
         internal void Awake()
         {
             var harmony = new Harmony(MOD_GUID);
+
+            writeOptimizedSave = Config.Bind<bool>("General", "writeOptimizedSave", true,
+                "When enabled, all saves written to disk are optimized. Turn this off if you want to write a vanilla save. You can still load optimized saves with this disabled.");
+
             harmony.PatchAll(typeof(Patch));
         }
 
@@ -34,6 +41,9 @@ namespace DSPOptimizations
             [HarmonyPatch(typeof(DysonShell), "Export")]
             public static bool ExportPrefix(ref BinaryWriter w, ref DysonShell __instance)
             {
+                if (!writeOptimizedSave.Value)
+                    return true;
+
                 // use -1 for the version number. 0 is the first vanilla save version for shells, and >= 1 is for the second version
                 w.Write(-1);
                 w.Write(__instance.id);
