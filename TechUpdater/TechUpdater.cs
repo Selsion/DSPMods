@@ -15,7 +15,7 @@ namespace TechUpdater
     {
         public const string MOD_GUID = "com.Selsion.TechUpdater";
         public const string MOD_NAME = "TechUpdater";
-        public const string MOD_VERSION = "0.1.0";
+        public const string MOD_VERSION = "0.1.1";
 
         internal void Awake()
         {
