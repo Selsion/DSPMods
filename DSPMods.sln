@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31402.337
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPOptimizations", "DSPOptimizations\DSPOptimizations.csproj", "{C4598385-2BFB-4BA0-AE22-E1F0CA1343A2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPOptimizations", "DSPOptimizations\DSPOptimizations.csproj", "{08C4E686-B111-425E-B9EB-C8FC72BDA1F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechUpdater", "TechUpdater\TechUpdater.csproj", "{7995E21B-6251-49EB-9A22-0CC23E054399}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C4598385-2BFB-4BA0-AE22-E1F0CA1343A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C4598385-2BFB-4BA0-AE22-E1F0CA1343A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C4598385-2BFB-4BA0-AE22-E1F0CA1343A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C4598385-2BFB-4BA0-AE22-E1F0CA1343A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08C4E686-B111-425E-B9EB-C8FC72BDA1F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08C4E686-B111-425E-B9EB-C8FC72BDA1F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08C4E686-B111-425E-B9EB-C8FC72BDA1F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08C4E686-B111-425E-B9EB-C8FC72BDA1F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7995E21B-6251-49EB-9A22-0CC23E054399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7995E21B-6251-49EB-9A22-0CC23E054399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7995E21B-6251-49EB-9A22-0CC23E054399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7995E21B-6251-49EB-9A22-0CC23E054399}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
