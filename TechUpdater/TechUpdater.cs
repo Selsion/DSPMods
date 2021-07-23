@@ -31,8 +31,6 @@ namespace TechUpdater
             public static void LoadCurrentGamePostfix(string saveName)
             {
                 // reset relevant values to what they are at the beginning of a game
-                //history.logisticDroneSpeedScale = 1f;
-
                 ModeConfig freeMode = Configs.freeMode;
                 Player mainPlayer = GameMain.mainPlayer;
                 Mecha mecha = mainPlayer.mecha;
@@ -40,6 +38,7 @@ namespace TechUpdater
                 mecha.droneSpeed = freeMode.mechaDroneSpeed;
                 mecha.droneMovement = freeMode.mechaDroneMovement;
 
+                // check if we need to call the upgrade function for each tech
                 for (int i = 2401; i <= 2407; i++)
                     checkTech(i);
                 for (int i = 2601; i <= 2606; i++)
@@ -63,22 +62,22 @@ namespace TechUpdater
                     for (int j = 0; j < proto.UnlockFunctions.Length; j++)
                         GameMain.history.UnlockTechFunction(proto.UnlockFunctions[j], proto.UnlockValues[j], state.maxLevel);
                 
-                // check if the tech has a new max level when we already finished the tech
-                if (state.unlocked && state.curLevel < proto.MaxLevel)
-                {
-                    state.unlocked = false;
-                    state.curLevel++;
-                }
-
                 // update tech info from proto
                 if (state.maxLevel != proto.MaxLevel)
                 {
+                    // check if the tech has a new max level when we already finished the tech
+                    if (state.unlocked)
+                    {
+                        state.unlocked = false;
+                        state.curLevel++;
+                    }
+
                     state.maxLevel = proto.MaxLevel;
                     state.hashNeeded = proto.GetHashNeeded(proto.Level);
                     state.hashUploaded = 0;
-                }
 
-                GameMain.history.techStates[techId] = state;
+                    GameMain.history.techStates[techId] = state;
+                }
             }
         }
     }
