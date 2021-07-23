@@ -34,6 +34,9 @@ namespace TechUpdater
                 ModeConfig freeMode = Configs.freeMode;
                 Player mainPlayer = GameMain.mainPlayer;
                 Mecha mecha = mainPlayer.mecha;
+
+                MechaDrone[] drones = (MechaDrone[])mecha.drones.Clone();
+
                 mecha.droneCount = freeMode.mechaDroneCount;
                 mecha.droneSpeed = freeMode.mechaDroneSpeed;
                 mecha.droneMovement = freeMode.mechaDroneMovement;
@@ -43,6 +46,11 @@ namespace TechUpdater
                     checkTech(i);
                 for (int i = 2601; i <= 2606; i++)
                     checkTech(i);
+
+                float droneSpeed = mecha.droneSpeed;
+                for (int i = 0; i < mecha.droneCount; i++)
+                    mecha.drones[i] = drones[i];
+                mecha.droneSpeed = droneSpeed;
             }
 
             public static void checkTech(int techId)
