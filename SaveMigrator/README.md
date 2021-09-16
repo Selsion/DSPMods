@@ -12,5 +12,18 @@ The mod will run immediately after a save is loaded, and will regenerate the pla
 It's recommended that you carefully check that the mod behaved as expected before saving, in case of bugs. This means checking that:
  1. All gas planets have been changed to the new expected type
  2. The appearances for the gas planets are correct (e.g. no planet has the appearance of a different type)
+ 3. Existing collectors were updated to reflect the new items and rates for their giant
+ 4. Vessels travelling to existing collectors were correctly reset
+ 5. Existing collectors are behaving correctly with respect to interstellar logistics
 
 If you want to be extra careful, consider saving the game under a new name rather than overwriting the old save.
+
+## Bug Reports
+If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
+
+## Changelog
+### v1.0.1
+- fixed the bug where collectors would still be collecting old items
+- reset any vessels travelling to (not from) updated collectors
+### v1.0.0
+- initial release on github
