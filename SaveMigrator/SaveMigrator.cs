@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Configuration;
 using UnityEngine;
 using HarmonyLib;
 
@@ -22,14 +23,38 @@ namespace SaveMigrator
         static int num_stations_changed;
         static int num_vessels_reset;
 
+        //public static ConfigEntry<bool> updateUnvisitedRockyPlanets;
+        public static ConfigEntry<bool> updateGasPlanets;
+        public static ConfigEntry<bool> updateDroneTech;
+        public static ConfigEntry<bool> updateSailLifeTech;
+
+
         internal void Awake()
         {
             var harmony = new Harmony(MOD_GUID);
             harmony.PatchAll(typeof(Patch));
             logger = Logger;
+
+            //updateUnvisitedRockyPlanets = Config.Bind<bool>("General", "updateRockyPlanets", true, "");
+            updateGasPlanets = Config.Bind<bool>("General", "updateGasPlanets", true, "Enable to update gas planets to their new types");
+            updateDroneTech = Config.Bind<bool>("General", "updateDroneTech", true, "Enable to update the Drone Engine and Communication Control techs");
+            updateSailLifeTech = Config.Bind<bool>("General", "updateSailLifeTech", true, "Enable to update the Solar Sail Life techs");
         }
 
-        private static void updateSave()
+        private static void UpdateSave()
+        {
+            if (DSPGame.IsMenuDemo)
+                return;
+
+            if (updateGasPlanets.Value)
+                UpdateGasPlanets();
+            if (updateDroneTech.Value)
+                UpdateDroneTech();
+            if (updateSailLifeTech.Value)
+                UpdateSailLifeTech();
+        }
+
+        private static void UpdateGasPlanets()
         {
             GameData data = GameMain.data;
 
@@ -52,7 +77,7 @@ namespace SaveMigrator
                     PlanetData planet = star.planets[j];
                     if (planet.type == EPlanetType.Gas) {
                         int old_theme_id = planet.theme;
-                        updatePlanet(planet, themeIds);
+                        UpdatePlanet(planet, themeIds);
                         if (planet.theme != old_theme_id)
                             planets_changed++;
                     }
@@ -64,7 +89,7 @@ namespace SaveMigrator
             logger.LogInfo(String.Format("{0} vessels travelling to collectors were reset", num_vessels_reset));
         }
 
-        private static void updatePlanet(PlanetData planet, int[] themeIds)
+        private static void UpdatePlanet(PlanetData planet, int[] themeIds)
         {
             // get the 5 random numbers made in CreatePlanet needed for SetPlanetTheme
             DotNet35Random rand = new DotNet35Random(planet.infoSeed);
@@ -87,16 +112,16 @@ namespace SaveMigrator
                     StationComponent stationComponent = transport.stationPool[i];
                     if (stationComponent != null && stationComponent.id == i)
                     {
-                        updateStation(stationComponent, planet);
+                        UpdateStation(stationComponent, planet);
                         transport.gameData.galacticTransport.RefreshTraffic(stationComponent.gid);
                     }
                 }
             }
         }
 
-        private static void updateStation(StationComponent station, PlanetData planet)
+        private static void UpdateStation(StationComponent station, PlanetData planet)
         {
-            resetIncomingVessels(station);
+            ResetIncomingVessels(station);
 
             EntityData entity = planet.factory.entityPool[station.entityId];
             ModelProto modelProto = LDB.models.Select((int)entity.modelIndex);
@@ -135,7 +160,7 @@ namespace SaveMigrator
             num_stations_changed++;
         }
 
-        private static void resetIncomingVessels(StationComponent station)
+        private static void ResetIncomingVessels(StationComponent station)
         {
             StationComponent[] gStationPool = GameMain.data.galacticTransport.stationPool;
             for (int j = 0; j < station.remotePairCount; j++)
@@ -177,6 +202,84 @@ namespace SaveMigrator
             }
         }
 
+        private static void UpdateDroneTech()
+        {
+            // reset relevant values to what they are at the beginning of a game
+            ModeConfig freeMode = Configs.freeMode;
+            Player mainPlayer = GameMain.mainPlayer;
+            Mecha mecha = mainPlayer.mecha;
+
+            MechaDrone[] drones = (MechaDrone[])mecha.drones.Clone();
+
+            int oldDroneCount = mecha.droneCount;
+            int oldDroneTaskCount = mecha.droneMovement;
+            float oldDroneSpeed = mecha.droneSpeed;
+
+            mecha.droneCount = freeMode.mechaDroneCount;
+            mecha.droneSpeed = freeMode.mechaDroneSpeed;
+            mecha.droneMovement = freeMode.mechaDroneMovement;
+
+            // check if we need to call the upgrade function for each tech
+            for (int i = 2401; i <= 2407; i++)
+                CheckTech(i);
+            for (int i = 2601; i <= 2606; i++)
+                CheckTech(i);
+
+            float droneSpeed = mecha.droneSpeed;
+            for (int i = 0; i < mecha.droneCount; i++)
+                mecha.drones[i] = drones[i];
+            mecha.droneSpeed = droneSpeed;
+
+
+            logger.LogInfo(String.Format("Updated drone count. Old value: {0} New value: {1}", oldDroneCount, mecha.droneCount));
+            logger.LogInfo(String.Format("Updated drone task count. Old value: {0} New value: {1}", oldDroneTaskCount, mecha.droneMovement));
+            logger.LogInfo(String.Format("Updated solar drone speed. Old value: {0} New value: {1}", oldDroneSpeed, droneSpeed));
+        }
+
+        private static void UpdateSailLifeTech()
+        {
+            float oldVal = GameMain.history.solarSailLife;
+            GameMain.history.solarSailLife = Configs.freeMode.solarSailLife;
+            for (int i = 3101; i <= 3106; i++)
+                CheckTech(i);
+            logger.LogInfo(String.Format("Updated solar sail life. Old value: {0} New value: {1}", oldVal, GameMain.history.solarSailLife));
+        }
+
+        public static void CheckTech(int techId)
+        {
+            TechState state = GameMain.history.TechState(techId);
+            TechProto proto = LDB.techs.Select(techId);
+
+            // unlock all levels under max level
+            for (int i = proto.Level; i < state.curLevel; i++)
+            {
+                for (int j = 0; j < proto.UnlockFunctions.Length; j++)
+                    GameMain.history.UnlockTechFunction(proto.UnlockFunctions[j], proto.UnlockValues[j], i);
+            }
+
+            // unlock last level
+            if (state.unlocked)
+                for (int j = 0; j < proto.UnlockFunctions.Length; j++)
+                    GameMain.history.UnlockTechFunction(proto.UnlockFunctions[j], proto.UnlockValues[j], state.maxLevel);
+
+            // update tech info from proto
+            if (state.maxLevel != proto.MaxLevel)
+            {
+                // check if the tech has a new max level when we already finished the tech
+                if (state.unlocked)
+                {
+                    state.unlocked = false;
+                    state.curLevel++;
+                }
+
+                state.maxLevel = proto.MaxLevel;
+                state.hashNeeded = proto.GetHashNeeded(proto.Level);
+                state.hashUploaded = 0; // is this needed? resets progress if they're already researching it
+
+                GameMain.history.techStates[techId] = state;
+            }
+        }
+
         [HarmonyPatch]
         public class Patch
         {
@@ -184,7 +287,7 @@ namespace SaveMigrator
             [HarmonyPatch(typeof(GameSave), "LoadCurrentGame")]
             public static void LoadCurrentGamePostfix(string saveName)
             {
-                updateSave();
+                UpdateSave();
             }
         }
     }
