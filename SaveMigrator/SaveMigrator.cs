@@ -17,7 +17,7 @@ namespace SaveMigrator
     {
         public const string MOD_GUID = "com.Selsion.SaveMigrator";
         public const string MOD_NAME = "SaveMigrator";
-        public const string MOD_VERSION = "1.0.1";
+        public const string MOD_VERSION = "1.1.0";
 
         static ManualLogSource logger;
         static int num_stations_changed;
