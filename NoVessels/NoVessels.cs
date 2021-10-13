@@ -27,28 +27,10 @@ namespace NoVessels
         {
             [HarmonyPrefix]
             [HarmonyPatch(typeof(LogisticShipRenderer), "Draw")]
-            public static bool LogisticShipRendererDrawPrefix()
-            {
-                return false;
-            }
-
-            [HarmonyPrefix]
             [HarmonyPatch(typeof(LogisticShipRenderer), "Update")]
-            public static bool LogisticShipRendererUpdatePrefix()
-            {
-                return false;
-            }
-
-            [HarmonyPrefix]
             [HarmonyPatch(typeof(LogisticShipUIRenderer), "Draw")]
-            public static bool LogisticShipUIRendererDrawPrefix()
-            {
-                return false;
-            }
-
-            [HarmonyPrefix]
             [HarmonyPatch(typeof(LogisticShipUIRenderer), "Update")]
-            public static bool LogisticShipUIRendererUpdatePrefix()
+            public static bool Prefix()
             {
                 return false;
             }
