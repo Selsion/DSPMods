@@ -44,6 +44,12 @@ namespace AbnormalityParser
             return count + " abnormality type" + (count != 1 ? "s" : "") + " detected" + (count > 0 ? ":" : "") + ret;
         }
 
+        private static string ResetMask(string param)
+        {
+            GameMain.abnormalityCheck.checkMask = 0;
+            return "Set mask to 0";
+        }
+
         [HarmonyPatch]
         public class Patch
         {
@@ -52,6 +58,7 @@ namespace AbnormalityParser
             public static void RegisterCommandsPostfix()
             {
                 XConsole.RegisterCommand("checkMask", new XConsole.DCommandFunc(CheckMask));
+                XConsole.RegisterCommand("resetMask", new XConsole.DCommandFunc(ResetMask));
             }
         }
     }
