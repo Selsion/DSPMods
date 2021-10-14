@@ -14,7 +14,7 @@ namespace AbnormalityParser
     {
         public const string MOD_GUID = "com.Selsion.AbnormalityParser";
         public const string MOD_NAME = "AbnormalityParser";
-        public const string MOD_VERSION = "1.0.0";
+        public const string MOD_VERSION = "1.1.0";
 
         private static string[] bit_names = { "PROTO", "TECH", "RECIPE", "STORAGE", "CONSOLE", "MECHA", "DYSON SPHERE", "PRODUCTION", "GALAXY", "FACTORY", "NUM" };
 
