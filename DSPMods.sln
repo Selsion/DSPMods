@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoVessels", "NoVessels\NoVe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbnormalityParser", "AbnormalityParser\AbnormalityParser.csproj", "{AB8A73B2-9A53-48BF-9897-5F8530AC7455}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPOptimizationsPreloader", "DSPOptimizationsPreloader\DSPOptimizationsPreloader.csproj", "{EE4A6510-8720-40DF-8810-7C2D3B93C650}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{AB8A73B2-9A53-48BF-9897-5F8530AC7455}.Release|x64.Build.0 = Release|Any CPU
 		{AB8A73B2-9A53-48BF-9897-5F8530AC7455}.Release|x86.ActiveCfg = Release|Any CPU
 		{AB8A73B2-9A53-48BF-9897-5F8530AC7455}.Release|x86.Build.0 = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|x64.Build.0 = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Debug|x86.Build.0 = Debug|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x64.ActiveCfg = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x64.Build.0 = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x86.ActiveCfg = Release|Any CPU
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
