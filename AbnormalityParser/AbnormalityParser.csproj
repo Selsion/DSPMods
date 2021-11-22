@@ -35,8 +35,9 @@
     <Reference Include="0Harmony">
       <HintPath>..\libs\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp.refstub">
-      <HintPath>..\libs\Assembly-CSharp.refstub.dll</HintPath>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\libs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\libs\BepInEx.dll</HintPath>
