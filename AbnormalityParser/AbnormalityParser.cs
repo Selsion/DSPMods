@@ -105,7 +105,7 @@ namespace AbnormalityParser
                 if(data.protoId == i / MAX_DATA_COUNT)
                 {
                     string name = LDB.abnormalities.Select(data.protoId).DeterminatorName;
-                    output.Add("Found abnormality " + name + " at index " + i + ". Message:\n" + data.ToString() + "\n\n");
+                    output.Add("Found abnormality " + name + " at index " + i + ". Message:\n" + data.ToMessageString() + "\n\n");
                 }
             }
 
