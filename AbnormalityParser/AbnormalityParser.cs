@@ -15,7 +15,7 @@ namespace AbnormalityParser
     {
         public const string MOD_GUID = "com.Selsion.AbnormalityParser";
         public const string MOD_NAME = "AbnormalityParser";
-        public const string MOD_VERSION = "1.2.0";
+        public const string MOD_VERSION = "1.2.1";
 
         public const string DIRECTORY_NAME = "AbnormalityParserMod";
         public const string DEFAULT_FILENAME = "abnormality_info.txt";
