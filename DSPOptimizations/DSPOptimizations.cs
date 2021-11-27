@@ -14,6 +14,7 @@ namespace DSPOptimizations
 {
     [BepInPlugin(MOD_GUID, MOD_NAME, MOD_VERSION)]
     [BepInProcess("DSPGAME.exe")]
+    [BepInDependency("crecheng.DSPModSave")]
     public class DSPOptimizations : BaseUnityPlugin, IModCanSave
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
@@ -27,6 +28,10 @@ namespace DSPOptimizations
 
         internal void Awake()
         {
+            //Directory.CreateDirectory("mmdump"); // or create it manually
+            //Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", "cecil"); // Also "mb" can work if mono runtime supports it; it can be a bit faster
+            //Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
+
             harmony = new Harmony(MOD_GUID);
 
             //harmony.PatchAll(typeof(NoShellDataPatch));
@@ -37,8 +42,17 @@ namespace DSPOptimizations
                 QualitySettings.shadows = ShadowQuality.Disable;
             else
                 QualitySettings.shadows = ShadowQuality.All;
+
+            //Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
         }
 
+        public void OnDestroy()
+        {
+            LowResShells.OnDestroy();
+            harmony?.UnpatchSelf();
+        }
+
+        // TODO: what if LowResShells isn't even enabled? we don't want to discard low res shell data, in case they enable it again
         void IModCanSave.Export(BinaryWriter w)
         {
             int version = 1;

@@ -10,36 +10,31 @@ using HarmonyLib;
 
 namespace DSPOptimizations
 {
-    class LowResShells
+    public class LowResShells
     {
-        public static float maxDesiredRadius = -1.0f;
-        public static bool enabled = false; // TODO: add code for disabling this optimization. what about mod savees when this is disabled?
-        public static bool regenExistingShells = false;
+        public static bool enabled = false; // TODO: what about mod saves when this is disabled?
 
         public static void Init(BaseUnityPlugin plugin, Harmony harmony)
         {
-            enabled = plugin.Config.Bind<bool>("LowResolutionShells", "LowResolutionShellsEnabled", false,
-                "Generate shell geometry with a lower resolution than normal. The resolution is modified with the ShellResolutionRadius variable."
+            enabled = plugin.Config.Bind<bool>("General", "LowResolutionShells", true,
+                "Enables generating shell geometry with a lower resolution than normal. A layer's resolution is modified in the dyson sphere window."
                 + " This will modify the way shells are stored in save files, but modded saves should still be compatible with the vanilla game."
                 + " Additional save data will be stored in a file with the extension 'moddsv'.").Value;
 
-            regenExistingShells = plugin.Config.Bind<bool>("LowResolutionShells", "RegenerateExistingShells", false,
-                "If true, then when loading a save, any existing shells will be renegerated with the desired resolution if needed."
-                + "If false, then existing shells will be left untouched, and only new shells will be generated with a lower resolution.").Value;
-
-            AcceptableValueRange<float> range = new AcceptableValueRange<float>(1.0f, 250000.0f);
-            ConfigDescription maxRadiusDesc = new ConfigDescription(
-                "Shell geometry will be generated with a resolution matching that of spheres with this radius in metres."
-                + " Decreasing this value lowers the vertex and triangle counts for your shells."
-                + " Spheres with smaller radii than the given value will be generated as normal.",
-                range);
-            maxDesiredRadius = (float)range.Clamp(plugin.Config.Bind<float>("LowResolutionShells", "ShellResolutionRadius", 6000.0f, maxRadiusDesc).Value);
-
             if (enabled)
+            {
                 harmony.PatchAll(typeof(Patch));
+                LowResShellsUI.Init(plugin, harmony);
+            }
         }
 
-        private static void swapVertOffsetArrays(DysonShell shell)
+        public static void OnDestroy()
+        {
+            if (enabled)
+                LowResShellsUI.OnDestroy();
+        }
+
+        private static void SwapVertOffsetArrays(DysonShell shell)
         {
             var temp = shell.vertsqOffset;
             shell.vertsqOffset = shell.vertsqOffset_lowRes;
@@ -47,30 +42,18 @@ namespace DSPOptimizations
         }
 
         // convert an existing shell to have a different resolution. calls GenerateGeometry, but otherwise lightweight
-        public static void regenGeoLowRes(DysonShell shell)
+        public static void RegenGeoLowRes(DysonShell shell)
         {
             int[] temp = (int[])shell.vertsqOffset.Clone();
             int[] oldNodeCps = (int[])shell.nodecps.Clone();
-            //genGeoLowRes(shell);
-            shell.GenerateGeometry(); // ADDED THIS. Note: changed by transpiler to be low res version
+            shell.GenerateGeometry();
             shell.vertsqOffset_lowRes = shell.vertsqOffset;
             shell.vertsqOffset = temp;
             shell.nodecps = oldNodeCps;
 
-            //return;
-
-            //shell.cellPoint = 0;
-
             for (int nodeIndex = 0; nodeIndex < shell.nodes.Count; nodeIndex++)
             {
                 int cps = shell.nodecps[nodeIndex];
-
-                // not correct for hi=15, lo=17
-
-                /*int nVertsHighRes = shell.vertsqOffset[nodeIndex + 1] - shell.vertsqOffset[nodeIndex];
-				int nVertsLowRes = shell.vertsqOffset_lowRes[nodeIndex + 1] - shell.vertsqOffset_lowRes[nodeIndex];
-				int rep = (nVertsHighRes - 1) / nVertsLowRes + 1; // rounds up
-				int nodecps_lowRes = (cps - 1) / rep + 1;*/
 
                 int cpHighRes = (shell.vertsqOffset[nodeIndex + 1] - shell.vertsqOffset[nodeIndex]) * 2;
                 int cpLowRes = (shell.vertsqOffset_lowRes[nodeIndex + 1] - shell.vertsqOffset_lowRes[nodeIndex]) * 2;
@@ -81,14 +64,8 @@ namespace DSPOptimizations
                 int cp_scaled = cps * cpLowRes;
                 int nodecps_lowRes = cp_scaled / cpHighRes;
 
-                /*bool print = cps == cpHighRes && shell.id < 30;
-				if(print)
-					UnityEngine.Debug.Log("cpHi:" + cpHighRes + ", cpLo:" + cpLowRes + ", cp_scaled:" + cp_scaled);*/
-
                 for (int i = 0; i < nodecps_lowRes / 2; i++)
                 {
-                    /*if(print)
-						UnityEngine.Debug.Log("shell.Id:" + shell.id + ", nodeIndex:" + nodeIndex + ", offset:" + shell.vertsqOffset_lowRes[nodeIndex] + ", idx:" + (shell.vertsqOffset_lowRes[nodeIndex] + i) + " vertices:" + shell.vertexCount);*/
                     int vertIdx = shell.vertsq[shell.vertsqOffset_lowRes[nodeIndex] + i];
 
                     if (i < nodecps_lowRes / 2 - 1)
@@ -96,14 +73,12 @@ namespace DSPOptimizations
                     else
                         shell.vertcps[vertIdx] = 2 - (uint)(nodecps_lowRes & 1);
                 }
-
-                //shell.cellPoint = shell.cellPoint + cps;
             }
 
             shell.buffer.SetData(shell.vertcps);
         }
 
-        class Patch
+        public class Patch
         {
             /** This is done to make the vanilla code export the low res version of vertsqOffset instead of the vanilla high res version.
              * This allows the low res shell to be loaded in the vanilla game. Only the node cp counts will be abnormal.
@@ -114,7 +89,7 @@ namespace DSPOptimizations
             [HarmonyPatch(typeof(DysonShell), "Export")]
             public static bool ExportPrefix(DysonShell __instance)
             {
-                swapVertOffsetArrays(__instance);
+                SwapVertOffsetArrays(__instance);
                 return true;
             }
 
@@ -123,7 +98,7 @@ namespace DSPOptimizations
             [HarmonyPatch(typeof(DysonShell), "Export")]
             public static void ExportPostfix(DysonShell __instance)
             {
-                swapVertOffsetArrays(__instance);
+                SwapVertOffsetArrays(__instance);
             }
 
             //
@@ -149,12 +124,18 @@ namespace DSPOptimizations
 
                 LocalBuilder scaleDownFactorVar = generator.DeclareLocal(typeof(float));
 
-                // compute radius_lowRes as Math.Min(radius, maxDesiredRadius)
+                // compute radius_lowRes as Math.Min(radius, parentLayer.radius_lowRes)
+                // TODO: this shouldn't even be needed anymore since we handle that with the layer
                 matcher.InsertAndAdvance(
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(radiusVarOpcode, radiusVarOperand),
-                    new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(LowResShells), nameof(LowResShells.maxDesiredRadius))),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Math), nameof(Math.Min), new[] { typeof(float), typeof(float) })),
+
+                    //new CodeInstruction(radiusVarOpcode, radiusVarOperand),
+
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.parentLayer))),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphereLayer), nameof(DysonSphereLayer.radius_lowRes))),
+
+                    //new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Math), nameof(Math.Min), new[] { typeof(float), typeof(float) })),
                     new CodeInstruction(OpCodes.Stfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.radius_lowRes)))
                 );
 
@@ -197,8 +178,9 @@ namespace DSPOptimizations
             [HarmonyPatch(typeof(DysonShell), "GenerateGeometry")]
             public static void GenerateVanillaCPCounts(DysonShell shell)
             {
-                //[HarmonyTranspiler, HarmonyPatch(typeof(DysonShell), nameof(DysonShell.GenerateGeometry))]
-                //static IEnumerable<CodeInstruction> DysonShell_GenerateGeometry_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+                //NoShellDataPatch.genGeoVanillaCounts(ref shell);
+                //return;
+
                 IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
                 {
                     CodeMatcher matcher = new CodeMatcher(instructions, generator);
@@ -255,7 +237,8 @@ namespace DSPOptimizations
                     object innerLoopVarOperand = matcher.Operand;
 
                     // find the local variable that stores the current vertex's position
-                    matcher.MatchForward(true,
+                    // note: this commented code extracted the wrong variable
+                    /*matcher.MatchForward(true,
                         new CodeMatch(OpCodes.Ldloc_S),
                         new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(VectorLF3), nameof(VectorLF3.z))),
                         new CodeMatch(OpCodes.Ldloc_S),
@@ -268,7 +251,8 @@ namespace DSPOptimizations
                         new CodeMatch(OpCodes.Ldloca_S),
                         new CodeMatch(OpCodes.Call),//, AccessTools.Property(typeof(VectorLF3), nameof(VectorLF3.normalized))),
                         new CodeMatch(OpCodes.Stloc_S)
-                    );
+                    );*/
+                    matcher.MatchForward(true, new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Maths), nameof(Maths.RotateLF)))).Advance(1);
                     object vertexPosVarOperand = matcher.Operand;
 
                     // find the code in the for-loop where we add the new vertex to the vertex dictionary
@@ -291,23 +275,13 @@ namespace DSPOptimizations
                     matcher.MatchForward(false,
                         //new CodeMatch(OpCodes.Ldc_R8, double.MaxValue)
                         new CodeMatch(OpCodes.Ldc_I4, 479001600)
-                    ).Advance(-5).Advance(-17);
+                    ).Advance(-5).Advance(-17); // TODO: switch back to the original code above. this was used for debugging
                     // replace verts[idx] with the vertex pos from the local variable found above
-                    //CodeInstruction vertexPosCI = new CodeInstruction(OpCodes.Ldloc_S, vertexPosVarOperand);
-                    //Label vertProcessBegin = generator.DefineLabel();
-                    //vertexPosCI.labels.Add(vertProcessBegin);
-                    // this line
-                    //matcher.SetInstructionAndAdvance(vertexPosCI).RemoveInstructions(3);
                     matcher.Insert(new CodeInstruction(OpCodes.Ldloc_S, vertexPosVarOperand)).CreateLabel(out Label vertProcessBegin);
-                    //UnityEngine.Debug.Log("HEEEELLLLLLLLLOOOOOO: " + matcher.Remaining);
-                    matcher.Advance(1)//.RemoveInstructions(4);
+                    matcher.Advance(1)
                     .SetOpcodeAndAdvance(OpCodes.Nop) // there's a label here
                     .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Call, vecCastOperand))
-                    //.SetOpcodeAndAdvance(OpCodes.Nop)
                     .RemoveInstructions(2);
-                    /*.SetOpcodeAndAdvance(OpCodes.Nop)
-                    .SetOpcodeAndAdvance(OpCodes.Nop)
-                    .SetOpcodeAndAdvance(OpCodes.Nop);*/
 
                     // replace the pqArr elements with the for-loop variables found above
                     ///*
@@ -315,6 +289,12 @@ namespace DSPOptimizations
                         new CodeInstruction(OpCodes.Ldloc_S, outerLoopVarOperand),
                         new CodeInstruction(OpCodes.Ldloc_S, innerLoopVarOperand)
                     );///*
+                    // replace loading the local variable equal to nodeCount / 2 with nodeCount / 2
+                    matcher.Advance(2).RemoveInstruction().InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Ldloc_S, nodeCountVar),
+                        new CodeInstruction(OpCodes.Ldc_I4_2),
+                        new CodeInstruction(OpCodes.Div)
+                    );
                     // find and remove the line of code that assigns an element of vertAttr after the for-loop
                     matcher.MatchForward(false,
                         new CodeMatch(OpCodes.Ldarg_0),
@@ -370,14 +350,33 @@ namespace DSPOptimizations
             [HarmonyPatch(typeof(DysonShell), "GenerateGeometry")]
             public static void DysonShell_GenerateGeometry_Postfix(ref DysonShell __instance, ref bool __state)
             {
-                if (__state)
+                if (__state) // skip generating vanilla cp counts if we're regenerating the shell
                 {
                     __instance.vertsqOffset_lowRes = (int[])__instance.vertsqOffset.Clone();
                     //NoShellDataPatch.genGeoVanillaCounts(ref __instance);
-                    GenerateVanillaCPCounts(__instance);
-                    //UnityEngine.Debug.Log("WARNING: gen vanilla counts");
+                    if(__instance.radius_lowRes != __instance.parentLayer.orbitRadius)
+                        GenerateVanillaCPCounts(__instance);
                 }
             }
+
+            /*[HarmonyPrefix]
+            [HarmonyPatch(typeof(DysonShell), "GenerateGeometry")]
+            public static void DysonShell_GenerateGeometry_Prefix(ref DysonShell __instance, ref int[] __state)
+            {
+                if (__instance.vertsqOffset == null)
+                    __state = null;
+                else
+                    __state = (int[])__instance.vertsqOffset.Clone();
+            }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(DysonShell), "GenerateGeometry")]
+            public static void DysonShell_GenerateGeometry_Postfix(ref DysonShell __instance, ref int[] __state)
+            {
+                __instance.vertsqOffset_lowRes = (int[])__instance.vertsqOffset.Clone();
+                if (__state == null && __instance.radius_lowRes != __instance.parentLayer.orbitRadius)
+                    GenerateVanillaCPCounts(__instance);
+            }*/
 
             [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereLayer), nameof(DysonSphereLayer.RemoveDysonShell))]
             static IEnumerable<CodeInstruction> DysonSphereLayer_RemoveDysonShell_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
@@ -472,7 +471,9 @@ namespace DSPOptimizations
                         int cp_scaled = shell.nodecps[nodeIndex] * cpLowRes;
 
                         //if (cpLowRes == 0) // used to divide by cpLowRes. no need to check this anymore
-                            //return;
+                        //return;
+                        if (shell.vertexCount == 0) // TODO: legacy code for old test save. delete this
+                            return;
 
                         if (cp_scaled % cpHighRes >= cpHighRes - cpLowRes)
                         {
@@ -480,6 +481,7 @@ namespace DSPOptimizations
                             int num4_2 = shell.vertsqOffset_lowRes[nodeIndex] + cp_scaled / cpHighRes / 2;
                             int num5 = shell.vertsq[num4_2];
                             shell.vertcps[num5] += 1U;
+                            shell.buffer.SetData(shell.vertcps); // note: added this. check buffer with legacy code. is it always non-null here?
                             Assert.True(shell.vertcps[num5] <= 2U);
                         }
                     })
@@ -487,10 +489,40 @@ namespace DSPOptimizations
 
                 // remove assertion at the end
                 matcher.MatchForward(false,
-                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Assert), nameof(Assert.True), new[] {typeof(bool)}))
-                ).Advance(-8).RemoveInstructions(9);
+                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Assert), nameof(Assert.True), new[] { typeof(bool) }))
+                ).Advance(-13).RemoveInstructions(14); // also remove the buffer call
+                //).Advance(-8).RemoveInstructions(9);
 
                 return matcher.InstructionEnumeration();
+            }
+
+            [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereSegmentRenderer), nameof(DysonSphereSegmentRenderer.DrawModels))]
+            static IEnumerable<CodeInstruction> DysonSphereSegmentRenderer_DrawModels_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                CodeMatcher matcher = new CodeMatcher(instructions, generator);
+
+                matcher.MatchForward(false, new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphereLayer), nameof(DysonSphereLayer.shellPool))));
+                matcher.Advance(4);
+                OpCode shellOpCode = matcher.Opcode;
+                var shellOperand = matcher.Operand;
+                matcher.Advance(5);
+                var label = matcher.Operand;
+
+                matcher.Advance(1).InsertAndAdvance(
+                    new CodeInstruction(shellOpCode, shellOperand),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.vertexCount))),
+                    new CodeInstruction(OpCodes.Ldc_I4_2),
+                    new CodeInstruction(OpCodes.Ble, label)
+                );
+
+                return matcher.InstructionEnumeration();
+            }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(DysonSphere), "AddLayer")]
+            public static void DysonSphere_AddLayer_Postfix(DysonSphereLayer __result)
+            {
+                __result.radius_lowRes = __result.orbitRadius;
             }
         }
     }

@@ -7,8 +7,46 @@ using System.IO;
 
 namespace DSPOptimizations
 {
-    class LowResShellsSaveManager
+    public class LowResShellsSaveManager
     {
+		private static MemoryStream stream;
+
+		public static void ExportWrapper(BinaryWriter w)
+        {
+            if (LowResShells.enabled)
+			{
+				w.Write(1);
+				stream = new MemoryStream();
+				Export(new BinaryWriter(stream));
+			}
+            else
+				w.Write(0);
+
+			if (stream == null)
+				w.Write(0); // stream length of 0
+			else
+			{
+				w.Write(stream.Length);
+				stream.WriteTo(w.BaseStream);
+			}
+		}
+
+		public static void ImportWrapper(BinaryReader r)
+        {
+			int wasEnabled = r.ReadInt32(); // is this even needed?
+			int streamLength = r.ReadInt32();
+			if (streamLength > 0)
+			{
+				stream = new MemoryStream();
+				stream.Write(r.ReadBytes(streamLength), 0, streamLength);
+			}
+			else
+				stream = null;
+
+			if(LowResShells.enabled)
+				Import(new BinaryReader(stream));
+        }
+		
 		public static void Export(BinaryWriter w)
 		{
 			int shellSaveVersion = 1;
@@ -36,6 +74,7 @@ namespace DSPOptimizations
 							w.Write(layer.orbitRadius);
 							w.Write(layer.id);
 
+							w.Write(layer.radius_lowRes);
 							w.Write(layer.shellCursor);
 
 							for (int k = 1; k < layer.shellCursor; k++)
@@ -46,10 +85,14 @@ namespace DSPOptimizations
 									w.Write(shell.id);
 
 									w.Write(shell.radius_lowRes);
+									
 									w.Write(shell.vertsqOffset.Length);
-
 									for (int l = 0; l < shell.vertsqOffset.Length; l++)
 										w.Write(shell.vertsqOffset[l]);
+
+									w.Write(shell.vertsqOffset_lowRes.Length);
+									for (int l = 0; l < shell.vertsqOffset_lowRes.Length; l++)
+										w.Write(shell.vertsqOffset_lowRes[l]);
 								}
 								else
 									w.Write(0);
@@ -133,6 +176,7 @@ namespace DSPOptimizations
 			int numLayers = r.ReadInt32(); // TODO: assume for now that the max number of layers will not change
 			for (int j = 1; j < numLayers; j++)
 			{
+				float layerRadius = r.ReadSingle();
 				int oldLayerId = r.ReadInt32();
 				/*
 				 * oldLayerID
@@ -162,6 +206,11 @@ namespace DSPOptimizations
 
 		private static void ImportLayer(BinaryReader r, DysonSphereLayer layer)
 		{
+			layer.radius_lowRes = r.ReadSingle();
+			// if the low res radius is invalid, then reset it
+			if (layer.radius_lowRes <= 0f || layer.radius_lowRes > layer.orbitRadius)
+				layer.radius_lowRes = layer.orbitRadius;
+
 			int oldShellCursor = r.ReadInt32();
 			int shellCursor = layer.shellCursor;
 			//w.Write(layer.shellCount);
@@ -221,6 +270,7 @@ namespace DSPOptimizations
 
 		private static void ImportLayerIgnore(BinaryReader r)
 		{
+			float layerRadiusLowRes = r.ReadSingle();
 			int oldShellCursor = r.ReadInt32();
 
 			for (int i = 1; i < oldShellCursor; i++)
@@ -233,6 +283,10 @@ namespace DSPOptimizations
 
 		private static void ImportLayerGenerate(DysonSphereLayer layer)
 		{
+			/*if (layer.radius_lowRes <= 0f)
+				layer.radius_lowRes = LowResShells.maxDesiredRadius;*/
+			layer.radius_lowRes = layer.orbitRadius;
+
 			int shellCursor = layer.shellCursor;
 
 			for (int i = 1; i < shellCursor; i++)
@@ -248,6 +302,15 @@ namespace DSPOptimizations
 			shell.radius_lowRes = r.ReadSingle();
 
 			int oldNumOffsets = r.ReadInt32();
+			int[] oldOffsets = new int[oldNumOffsets];
+			for (int i = 0; i < oldNumOffsets; i++)
+				oldOffsets[i] = r.ReadInt32();
+
+			int oldNumOffsetsLowRes = r.ReadInt32();
+			int[] oldOffsetsLowRes = new int[oldNumOffsetsLowRes];
+			for (int i = 0; i < oldNumOffsetsLowRes; i++)
+				oldOffsetsLowRes[i] = r.ReadInt32();
+
 			int numOffsets = shell.vertsqOffset.Length;
 
 			/* Note: Guaranteed that layerRadius == oldLayerRadius. other functions would be called otherwise
@@ -263,8 +326,8 @@ namespace DSPOptimizations
 			 * Summary: regenerate (at minDesiredRadius) iff radius_lowRes != minDesiredRadius
 			 */
 
-			float regenRadius = Math.Min(shell.parentLayer.orbitRadius, LowResShells.maxDesiredRadius);//DESIRED_RADIUS);
-			bool regen = regenRadius != shell.radius_lowRes && LowResShells.regenExistingShells; // TODO: add config option // Note: exact fp values are saved, so testing for equality is fine here
+			//float regenRadius = Math.Min(shell.parentLayer.orbitRadius, LowResShells.maxDesiredRadius);//DESIRED_RADIUS);
+			//bool regen = regenRadius != shell.radius_lowRes && LowResShells.regenExistingShells; // TODO: add config option // Note: exact fp values are saved, so testing for equality is fine here
 
 			/*
 			 * if not regenerating (Note: regeneration is for changing resolution of shells. generation is for entirely new shells):
@@ -273,7 +336,26 @@ namespace DSPOptimizations
 			 * oldNumOffsets = numOffsets : load as normal
 			 */
 
-			if (oldNumOffsets != numOffsets)
+			bool arraysMatch = oldNumOffsets == numOffsets && oldNumOffsetsLowRes == numOffsets;
+			if (arraysMatch) {
+				for (int i = 0; i < numOffsets; i++) {
+					// note: the shell currently has the low res offsets
+					if (shell.vertsqOffset[i] != oldOffsetsLowRes[i] || oldOffsetsLowRes[i] > oldOffsets[i]) {
+						arraysMatch = false;
+						break;
+					}
+				}
+			}
+
+			if (arraysMatch)
+			{
+				shell.vertsqOffset_lowRes = oldOffsetsLowRes;
+				shell.vertsqOffset = oldOffsets;
+			}
+			else
+				ImportShellGenerate(shell);
+
+			/*if (oldNumOffsets != numOffsets || oldNumOffsetsLowRes != numOffsets)
 			{
 				for (int i = 0; i < oldNumOffsets; i++)
 					r.ReadInt32();
@@ -284,9 +366,9 @@ namespace DSPOptimizations
 				shell.vertsqOffset_lowRes = (int[])shell.vertsqOffset.Clone();
 				for (int l = 0; l < shell.vertsqOffset.Length; l++)
 					shell.vertsqOffset[l] = r.ReadInt32();
-				if (regen)
-					LowResShells.regenGeoLowRes(shell);
-			}
+				//if (regen)
+					//LowResShells.regenGeoLowRes(shell);
+			}*/
 		}
 
 		private static void ImportShellIgnore(BinaryReader r)
@@ -295,11 +377,17 @@ namespace DSPOptimizations
 			int oldNumOffsets = r.ReadInt32();
 			for (int i = 0; i < oldNumOffsets; i++)
 				r.ReadInt32();
+			
+			int oldNumOffsetsLowRes = r.ReadInt32();
+			for (int i = 0; i < oldNumOffsetsLowRes; i++)
+				r.ReadInt32();
 		}
 
 		private static void ImportShellGenerate(DysonShell shell)
 		{
-			LowResShells.regenGeoLowRes(shell);
+			//LowResShells.regenGeoLowRes(shell);
+			shell.radius_lowRes = shell.parentLayer.radius_lowRes;
+			shell.vertsqOffset_lowRes = (int[])shell.vertsqOffset.Clone();
 		}
 
 		public static void IntoOtherSave()

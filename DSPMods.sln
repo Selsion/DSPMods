@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AbnormalityParser", "Abnorm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPOptimizationsPreloader", "DSPOptimizationsPreloader\DSPOptimizationsPreloader.csproj", "{EE4A6510-8720-40DF-8810-7C2D3B93C650}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DSPOptimizations", "DSPOptimizations", "{B1EDBD3E-FDB1-4A88-82EA-9DF2697E9061}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSPOptimizationsTestMod", "DSPOptimizationsTestMod\DSPOptimizationsTestMod.csproj", "{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,9 +129,26 @@ Global
 		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x64.Build.0 = Release|Any CPU
 		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE4A6510-8720-40DF-8810-7C2D3B93C650}.Release|x86.Build.0 = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|x64.Build.0 = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Debug|x86.Build.0 = Debug|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|x64.ActiveCfg = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|x64.Build.0 = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|x86.ActiveCfg = Release|Any CPU
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{08C4E686-B111-425E-B9EB-C8FC72BDA1F7} = {B1EDBD3E-FDB1-4A88-82EA-9DF2697E9061}
+		{EE4A6510-8720-40DF-8810-7C2D3B93C650} = {B1EDBD3E-FDB1-4A88-82EA-9DF2697E9061}
+		{FCE68BF7-E871-4BDC-B366-A37DDF47F3A5} = {B1EDBD3E-FDB1-4A88-82EA-9DF2697E9061}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {35A85E79-02FE-4D35-84A9-A8818C63BD2B}
