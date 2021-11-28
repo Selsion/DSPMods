@@ -31,20 +31,6 @@ namespace DSPOptimizationsTestMod
             this.context = context;
             this.patchClass = patchClass;
         }
-
-        public bool IsInContext()
-        {
-            if (context == TestContext.Any)
-                return true;
-            else if (context == TestContext.DysonUI)
-                return DSPOptimizations.LowResShellsUI.InitializedUI;
-            else if (context == TestContext.SaveLoaded)
-                return DSPGame.Game != null && !DSPGame.IsMenuDemo;
-            else if (context == TestContext.ExistsShell)
-                return LowResShellsTest.Shell != null;
-            else
-                throw new Exception("Unimplemented test context");
-        }
     }
     
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
@@ -85,6 +71,19 @@ namespace DSPOptimizationsTestMod
         {
 
         }
+        public static bool IsInContext(TestContext context)
+        {
+            if (context == TestContext.Any)
+                return true;
+            else if (context == TestContext.DysonUI)
+                return DSPOptimizations.LowResShellsUI.InitializedUI;
+            else if (context == TestContext.SaveLoaded)
+                return DSPGame.Game != null && !DSPGame.IsMenuDemo;
+            else if (context == TestContext.ExistsShell)
+                return LowResShellsTest.Shell != null;
+            else
+                throw new Exception("Unimplemented test context");
+        }
 
         private static bool IsValidTest(MethodInfo method)
         {
@@ -115,15 +114,31 @@ namespace DSPOptimizationsTestMod
             Mod.logger.LogInfo(string.Format("{0} test{1} loaded", tests.Count, tests.Count == 1 ? "" : "s"));
         }
 
+        private static List<TestContext> GetMatchingContexts(bool contextSatisfied)
+        {
+            List<TestContext> ret = new List<TestContext>();
+            foreach (var context in (TestContext[])Enum.GetValues(typeof(TestContext)))
+                if (IsInContext(context) == contextSatisfied)
+                    ret.Add(context);
+            return ret;
+        }
+
         [Command("runTests")]
         public static string RunAllTests(string param)
         {
             int numTestsPassed = 0, numTestsInContext = 0;
+            Dictionary<TestContext, int> skippedCounts = new Dictionary<TestContext, int>();
 
-            foreach(var test in tests)
+            foreach (var test in tests)
             {
-                if (!test.IsInContext())
+                if (!IsInContext(test.context))
+                {
+                    if (!skippedCounts.ContainsKey(test.context))
+                        skippedCounts[test.context] = 1;
+                    else
+                        skippedCounts[test.context] = skippedCounts[test.context] + 1;
                     continue;
+                }
                 numTestsInContext++;
 
                 Harmony harmony = null;
@@ -151,8 +166,16 @@ namespace DSPOptimizationsTestMod
                     harmony.UnpatchSelf();
             }
 
+            string contextMessage = "";
+            if(skippedCounts.Count() > 0)
+            {
+                contextMessage = "\nTests in the following contexts were not run:";
+                foreach (var unsatisfiedContext in skippedCounts)
+                    contextMessage += string.Format("\n{0}: {1}", Enum.GetName(typeof(TestContext), unsatisfiedContext.Key), unsatisfiedContext.Value);
+            }
 
-            return string.Format("Ran {0}/{1} tests. {2}/{0} tests passed", numTestsInContext, tests.Count, numTestsPassed);
+
+            return string.Format("Ran {0}/{1} tests. {2}/{0} tests passed.{3}", numTestsInContext, tests.Count, numTestsPassed, contextMessage);
         }
     }
 }
