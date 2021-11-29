@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine.UI;
+using UnityEngine;
 using DSPOptimizations;
 
 namespace DSPOptimizationsTestMod.Tests
@@ -81,26 +82,29 @@ namespace DSPOptimizationsTestMod.Tests
 
             IterateLayers((DysonSphereLayer layer) =>
             {
-                var vals = new float[] { 1f, layer.orbitRadius * 0.1f, layer.orbitRadius * 0.5f, layer.orbitRadius };
+                SelectLayer(layer.id);
+                var vals = new float[] { 1f, layer.orbitRadius * 0.1f, layer.orbitRadius * 0.5f, layer.orbitRadius }.Select(x => Mathf.Round(x));
 
                 foreach (float val in vals)
                 {
-                    LowResShellsUI.resSlider.value = val;
+                    //LowResShellsUI.resSlider.value = val;
+                    LowResShellsUI.OnResSliderChange(val);
                     if (!ValidRadius(layer) || layer.radius_lowRes != val || layer.radius_lowRes != LowResShellsUI.resSlider.value
                         || layer.radius_lowRes.ToString() != LowResShellsUI.resValue.text)
                         ret = false;
                 }
-
+                
                 foreach(float val in vals)
                 {
-                    LowResShellsUI.resValue.text = val.ToString();
+                    //LowResShellsUI.resValue.text = val.ToString();
+                    LowResShellsUI.OnValueTextBoxChange(val.ToString());
                     if (!ValidRadius(layer) || layer.radius_lowRes != val || layer.radius_lowRes != LowResShellsUI.resSlider.value
                         || layer.radius_lowRes.ToString() != LowResShellsUI.resValue.text)
                         ret = false;
                 }
             });
 
-            return true;
+            return ret;
         }
 
 

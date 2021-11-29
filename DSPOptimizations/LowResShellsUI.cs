@@ -37,6 +37,8 @@ namespace DSPOptimizations
             UnityEngine.Object.Destroy(resSliderObj);
             UnityEngine.Object.Destroy(resValueObj);
             UnityEngine.Object.Destroy(regenButtonObj);
+            UnityEngine.Object.Destroy(resLabelObj);
+            UnityEngine.Object.Destroy(expVertsLabelObj);
         }
 
         private static void CreateUI()

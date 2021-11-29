@@ -4,6 +4,7 @@ using HarmonyLib;
 using BepInEx;
 using UnityEngine;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Threading;
@@ -19,18 +20,21 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "0.1.0";
+        public const string MOD_VERSION = "1.0.0";
 
         public static ConfigEntry<bool> writeOptimizedSave;
         public static ConfigEntry<bool> skipDraws;
 
         private static Harmony harmony;
+        public static ManualLogSource logger;
 
         internal void Awake()
         {
             //Directory.CreateDirectory("mmdump"); // or create it manually
             //Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", "cecil"); // Also "mb" can work if mono runtime supports it; it can be a bit faster
             //Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
+
+            logger = Logger;
 
             harmony = new Harmony(MOD_GUID);
 
@@ -58,14 +62,15 @@ namespace DSPOptimizations
             int version = 1;
             w.Write(version);
 
-            LowResShellsSaveManager.Export(w);
+            LowResShellsSaveManager.ExportWrapper(w);
         }
 
         void IModCanSave.Import(BinaryReader r)
         {
             int version = r.ReadInt32();
 
-            LowResShellsSaveManager.Import(r);
+            LowResShellsSaveManager.ImportWrapper(r);
+            //LowResShellsSaveManager.Import(r, -1);
         }
 
         void IModCanSave.IntoOtherSave()

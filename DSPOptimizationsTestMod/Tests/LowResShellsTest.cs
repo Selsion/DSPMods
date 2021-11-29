@@ -18,7 +18,7 @@ namespace DSPOptimizationsTestMod.Tests
          * -can call construct from 0% cp to 100% cp. cannot overflow
          */
 
-        private static void IterShells(Action<DysonShell> f)
+        public static void IterShells(Action<DysonShell> f)
         {
             var spheres = GameMain.data?.dysonSpheres;
             if (spheres != null)
@@ -191,7 +191,7 @@ namespace DSPOptimizationsTestMod.Tests
             }
         }
 
-        private static void RandomRegen(DysonShell shell)
+        public static void RandomRegen(DysonShell shell)
         {
             var layer = shell.parentLayer;
             float r = (float)TestManager.rng.NextDouble();
@@ -199,6 +199,12 @@ namespace DSPOptimizationsTestMod.Tests
 
             //shell.GenerateGeometry();
             LowResShells.RegenGeoLowRes(shell);
+        }
+
+        [Command("vertsError")]
+        public static string CmdVertsError(string param)
+        {
+            return LowResShells.ExpectedVerticesRelError(Shell).ToString();
         }
 
         public static bool ValidShell(DysonShell shell)
@@ -214,8 +220,8 @@ namespace DSPOptimizationsTestMod.Tests
                     return false;
                 if (j > 0 && shell.vertsqOffset[j] < shell.vertsqOffset[j - 1])
                     return false;
-                if (j > 0 && (shell.vertsqOffset[j] - shell.vertsqOffset[j - 1]) * 2 < shell.nodecps[j - 1])
-                    return false;
+                /*if (j > 0 && (shell.vertsqOffset[j] - shell.vertsqOffset[j - 1]) * 2 < shell.nodecps[j - 1])
+                    return false;*/
             }
             
             if (shell.vertexCount == 0)
@@ -232,11 +238,18 @@ namespace DSPOptimizationsTestMod.Tests
         {
             var shell = Shell;
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 30; i++)
             {
                 RandomRegen(shell);
-                if(!ValidShell(shell))
+                if (!ValidShell(shell))
+                {
+                    Mod.logger.LogError(string.Format(
+                        "Invalid shell {0}: radius_lowRes={1}, nodecps=[{2}], vertsqOffset=[{3}], vertsqOffset_lowRes=[{4}]",
+                        shell.id, string.Join(", ", shell.nodecps), string.Join(", ", shell.vertsqOffset), string.Join(", ", shell.vertsqOffset_lowRes)
+                    ));
+
                     return false;
+                }
             }
 
             return true;
@@ -269,6 +282,8 @@ namespace DSPOptimizationsTestMod.Tests
             var shell = Shell;
 
             RandomRegen(shell);
+            // note: changed to the one that preserves node cps
+            //LowResShells.GenerateVanillaCPCountsPreserveNodeCP(shell);
             LowResShells.Patch.GenerateVanillaCPCounts(shell);
             //int[] cpCounts = (int[])shell.vertsqOffset.Clone();
             int cpCount = shell.vertsqOffset[shell.vertsqOffset.Length - 1];

@@ -70,7 +70,7 @@
     <Compile Include="TestManager.cs" />
     <Compile Include="Tests\DysonUITests.cs" />
     <Compile Include="Tests\LowResShellsTest.cs" />
-    <Compile Include="Tests\SaveTests.cs" />
+    <Compile Include="Tests\LowResShellsSaveTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DSPOptimizations\DSPOptimizations.csproj">

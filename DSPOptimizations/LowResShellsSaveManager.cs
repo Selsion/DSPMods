@@ -17,7 +17,10 @@ namespace DSPOptimizations
 			{
 				w.Write(1);
 				stream = new MemoryStream();
-				Export(new BinaryWriter(stream));
+				var w2 = new BinaryWriter(stream);
+				Export(w2);
+				w2.Flush();
+				stream.Position = 0; // is this needed
 			}
             else
 				w.Write(0);
@@ -26,27 +29,67 @@ namespace DSPOptimizations
 				w.Write(0); // stream length of 0
 			else
 			{
-				w.Write(stream.Length);
+				w.Write((int)stream.Length); // CAUTION: casting long to int
 				stream.WriteTo(w.BaseStream);
+				DSPOptimizations.logger.LogDebug(string.Format("Wrote {0} bytes to disk for LowResShells", stream.Length));
 			}
 		}
 
 		public static void ImportWrapper(BinaryReader r)
         {
 			int wasEnabled = r.ReadInt32(); // is this even needed?
-			int streamLength = r.ReadInt32();
+			int streamLength = r.ReadInt32(); // CAUTION: the variable we're reading used to be a long
+			DSPOptimizations.logger.LogDebug(string.Format("LowResShells has {0} bytes to import", streamLength));
 			if (streamLength > 0)
 			{
 				stream = new MemoryStream();
 				stream.Write(r.ReadBytes(streamLength), 0, streamLength);
+
+				/*stream.Position = 0;
+				DumpStream(stream, false);*/
+
+				//DSPOptimizations.logger.LogDebug("stream position: " + stream.Position);
+				stream.Position = 0;
+
+				if (LowResShells.enabled)
+				{
+					try
+					{
+						Import(new BinaryReader(stream), streamLength);
+					}
+					catch (EndOfStreamException)
+					{
+						DSPOptimizations.logger.LogError(
+							"Reached the end of the low res shells save data when reading." +
+							" The data is likely either corrupt or invalid and will be ignored." +
+							" New data will be generated."
+						);
+						IntoOtherSave();
+						//DumpStream(stream, false);
+					}
+					catch(Exception e)
+                    {
+						DSPOptimizations.logger.LogError(
+							"Unhandled exception when loading low res shells data." +
+							" New data will be generated in place of the old data. Error message:\n"
+							+ e.InnerException
+						);
+						IntoOtherSave();
+                    }
+				}
 			}
 			else
+			{
 				stream = null;
 
-			if(LowResShells.enabled)
-				Import(new BinaryReader(stream));
+                if (LowResShells.enabled)
+                {
+					DSPOptimizations.logger.LogWarning("No low res shells save data exists. New data will be generated.");
+					IntoOtherSave();
+                }
+			}
         }
-		
+
 		public static void Export(BinaryWriter w)
 		{
 			int shellSaveVersion = 1;
@@ -85,6 +128,7 @@ namespace DSPOptimizations
 									w.Write(shell.id);
 
 									w.Write(shell.radius_lowRes);
+									w.Write(shell.surfaceAreaUnitSphere); // can be used to identify shells
 									
 									w.Write(shell.vertsqOffset.Length);
 									for (int l = 0; l < shell.vertsqOffset.Length; l++)
@@ -110,37 +154,52 @@ namespace DSPOptimizations
 			}
 		}
 
-		public static void Import(BinaryReader r)
+		public static void Import(BinaryReader r, int streamLength)
 		{
 			int shellSaveVersion = r.ReadInt32();
 
-			var spheres = GameMain.data.dysonSpheres;
-			//w.Write(spheres.Length);
-			int numSpheres = r.ReadInt32(); // TODO: assume for now that the number of stars will not change
-			for (int i = 0; i < numSpheres; i++)
+			if (shellSaveVersion == 1)
 			{
-				var sphere = spheres[i];
-				int sphereExisted = r.ReadInt32();
+				var spheres = GameMain.data.dysonSpheres;
+				//w.Write(spheres.Length);
+				int numSpheres = r.ReadInt32(); // TODO: assume for now that the number of stars will not change
+				
+				for (int i = 0; i < numSpheres; i++)
+				{
+					var sphere = spheres[i];
+					int sphereExisted = r.ReadInt32();
+					
+					/* sphere, sphereExisted
+					 * 0, 0 : no sphere existed last time the mod was loaded, and no sphere exists now. skip
+					 * 0, 1 : the sphere was deleted in vanilla. read and ignore the mod data
+					 * 1, 0 : the sphere was added in vanilla. generate modded data without reading
+					 * 1, 1 : the sphere existed last time the mod was loaded, and still exists now. load as normal
+					 */
 
-				/* sphere, sphereExisted
-                 * 0, 0 : no sphere existed last time the mod was loaded, and no sphere exists now. skip
-                 * 0, 1 : the sphere was deleted in vanilla. read and ignore the mod data
-                 * 1, 0 : the sphere was added in vanilla. generate modded data without reading
-                 * 1, 1 : the sphere existed last time the mod was loaded, and still exists now. load as normal
-                 */
-
-				if (sphere != null && sphereExisted == 1)
-					ImportSphere(r, sphere);
-				else if (sphere != null && sphereExisted == 0)
-					ImportSphereGenerate(sphere);
-				else if (sphere == null && sphereExisted == 1)
-					ImportSphereIgnore(r);
+					if (sphere != null && sphereExisted == 1)
+						ImportSphere(r, sphere);
+					else if (sphere != null && sphereExisted == 0)
+						ImportSphereGenerate(sphere);
+					else if (sphere == null && sphereExisted == 1)
+						ImportSphereIgnore(r);
+				}
 			}
+            else
+            {
+				// note: this will catch most data corruption errors.
+				// most of the others will be caught by EoF errors, which are handled by ImportWrapper
+				DSPOptimizations.logger.LogError(string.Format(
+					"Invalid shell save version: {0}. Shell save data will be discarded. New data will be generated.",
+					shellSaveVersion));
+				r.ReadBytes(streamLength - 4); // ignore the rest of the data
+				IntoOtherSave(); // TODO: do we need a better recovery method?
+            }
 		}
 
 		private static void ImportSphere(BinaryReader r, DysonSphere sphere)
 		{
 			int numLayers = r.ReadInt32(); // TODO: assume for now that the max number of layers will not change
+			
 			for (int i = 1; i < numLayers; i++)
 			{
 				var layer = sphere.layersIdBased[i];
@@ -300,6 +359,7 @@ namespace DSPOptimizations
 		private static void ImportShell(BinaryReader r, DysonShell shell)
 		{
 			shell.radius_lowRes = r.ReadSingle();
+			float oldSA = r.ReadSingle();
 
 			int oldNumOffsets = r.ReadInt32();
 			int[] oldOffsets = new int[oldNumOffsets];
@@ -340,20 +400,30 @@ namespace DSPOptimizations
 			if (arraysMatch) {
 				for (int i = 0; i < numOffsets; i++) {
 					// note: the shell currently has the low res offsets
-					if (shell.vertsqOffset[i] != oldOffsetsLowRes[i] || oldOffsetsLowRes[i] > oldOffsets[i]) {
+					// note: the commented out code might not be correct in very specific cases where the vanilla cp
+					//		counts were generated slightly differently than normal. sometimes a small number of vertices
+					//		might be owned by a different node instead. so we instead check the total vertex counts
+					if (shell.vertsqOffset[i] != oldOffsetsLowRes[i])// || oldOffsetsLowRes[i] > oldOffsets[i])
+					{
 						arraysMatch = false;
 						break;
 					}
 				}
+				if (oldOffsetsLowRes[numOffsets - 1] > oldOffsets[numOffsets - 1])
+					arraysMatch = false;
 			}
 
-			if (arraysMatch)
+			// different shells will usually have different surface areas. we can use this fact to
+			// identify when the shell changed
+			float shellSARelErr = (oldSA - shell.surfaceAreaUnitSphere) / shell.surfaceAreaUnitSphere;
+
+			if (arraysMatch && Math.Abs(shellSARelErr) < 0.01f)
 			{
 				shell.vertsqOffset_lowRes = oldOffsetsLowRes;
 				shell.vertsqOffset = oldOffsets;
 			}
 			else
-				ImportShellGenerate(shell);
+				ImportShellGenerate(shell, true);
 
 			/*if (oldNumOffsets != numOffsets || oldNumOffsetsLowRes != numOffsets)
 			{
@@ -374,6 +444,8 @@ namespace DSPOptimizations
 		private static void ImportShellIgnore(BinaryReader r)
 		{
 			r.ReadSingle();
+			r.ReadSingle();
+
 			int oldNumOffsets = r.ReadInt32();
 			for (int i = 0; i < oldNumOffsets; i++)
 				r.ReadInt32();
@@ -383,12 +455,44 @@ namespace DSPOptimizations
 				r.ReadInt32();
 		}
 
-		private static void ImportShellGenerate(DysonShell shell)
+		private static void ImportShellGenerate(DysonShell shell, bool overrideFlag = false)
 		{
 			//LowResShells.regenGeoLowRes(shell);
 			shell.radius_lowRes = shell.parentLayer.radius_lowRes;
 			shell.vertsqOffset_lowRes = (int[])shell.vertsqOffset.Clone();
+
+			// try to detect when a user loads a save with low res shells, but deleted the .moddsv file
+			bool invalid = false;
+			for (int i = 0; i < shell.nodes.Count; i++)
+			{
+				if (shell.nodecps[i] > (shell.vertsqOffset[i + 1] - shell.vertsqOffset[i]) * 2)
+				{
+					invalid = true;
+					break;
+				}
+			}
+			// note: for the tiniest of shells on a 4km radius sphere, the rel error can be up to 0.18
+			//       those will cost almost nothing to regenerate though, so false positives are fine
+			// TODO: see if we can get a more accurate vertex count. then we can detect more incorrect vertex counts
+			if (overrideFlag || invalid || Math.Abs(LowResShells.ExpectedVerticesRelError(shell)) > 0.1f) // TODO: invalidate entire layer?
+			{
+				shell.vertsqOffset = null;
+				LowResShells.GenerateVanillaCPCountsPreserveNodeCP(shell);
+				// TODO: add a single warning for all these calls, with the total number regenerated
+				// TODO: sometimes a tiny number of node cps are lost
+			}
+
+			// if the node cps are still too big after generting the vanilla cp counts, then adjust the node cps
+			// TODO: refactor this into some method. this same code is used at least twice
+			int cpSum = 0;
+			for (int i = 0; i < shell.nodes.Count; i++)
+				cpSum += shell.nodecps[i] = Math.Min(shell.nodecps[i], (shell.vertsqOffset[i + 1] - shell.vertsqOffset[i]) * 2);
+			shell.cellPoint = cpSum;
+
+			// TODO: do we regen geometry as well?
 		}
+
+		// TODO: EoF error (which is handled) when loading in vanilla, adding a shell, then loading the same save in modded
 
 		public static void IntoOtherSave()
 		{

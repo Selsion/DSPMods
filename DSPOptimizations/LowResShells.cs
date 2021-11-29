@@ -34,16 +34,46 @@ namespace DSPOptimizations
                 LowResShellsUI.OnDestroy();
         }
 
-        private static void SwapVertOffsetArrays(DysonShell shell)
+        public static void SwapVertOffsetArrays(DysonShell shell)
         {
             var temp = shell.vertsqOffset;
             shell.vertsqOffset = shell.vertsqOffset_lowRes;
             shell.vertsqOffset_lowRes = temp;
         }
 
+        public static float ExpectedVerticesRelError(DysonShell shell)
+        {
+            // need to have the correct number of verts in vertsqOffset
+            float trueVerts = shell.vertsqOffset[shell.vertsqOffset.Length - 1];
+
+            float trueRadius = shell.parentLayer.orbitRadius;
+            float expectedVerts = shell.surfaceAreaUnitSphere * trueRadius * trueRadius / 5540f;
+
+            // note: trueVerts should always be well above 0
+            return (expectedVerts - trueVerts) / trueVerts;
+        }
+
         // convert an existing shell to have a different resolution. calls GenerateGeometry, but otherwise lightweight
         public static void RegenGeoLowRes(DysonShell shell)
         {
+            bool regenVanillaFlag = false;
+            for(int i = 0; i < shell.nodes.Count; i++)
+            {
+                if(shell.nodecps[i] > (shell.vertsqOffset[i + 1] - shell.vertsqOffset[i]) * 2)
+                {
+                    shell.vertsqOffset = null;
+                    GenerateVanillaCPCountsPreserveNodeCP(shell);
+                    regenVanillaFlag = true;
+                    break;
+                }
+            }
+            if (regenVanillaFlag) {
+                int cpSum = 0;
+                for (int i = 0; i < shell.nodes.Count; i++)
+                    cpSum += shell.nodecps[i] = Math.Min(shell.nodecps[i], (shell.vertsqOffset[i + 1] - shell.vertsqOffset[i]) * 2);
+                shell.cellPoint = cpSum;
+            }
+
             int[] temp = (int[])shell.vertsqOffset.Clone();
             int[] oldNodeCps = (int[])shell.nodecps.Clone();
             shell.GenerateGeometry();
@@ -76,6 +106,13 @@ namespace DSPOptimizations
             }
 
             shell.buffer.SetData(shell.vertcps);
+        }
+
+        public static void GenerateVanillaCPCountsPreserveNodeCP(DysonShell shell)
+        {
+            int[] oldCps = (int[])shell.nodecps.Clone();
+            Patch.GenerateVanillaCPCounts(shell);
+            shell.nodecps = oldCps;
         }
 
         public class Patch

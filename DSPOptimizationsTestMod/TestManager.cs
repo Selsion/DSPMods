@@ -80,7 +80,7 @@ namespace DSPOptimizationsTestMod
             else if (context == TestContext.SaveLoaded)
                 return DSPGame.Game != null && !DSPGame.IsMenuDemo;
             else if (context == TestContext.ExistsShell)
-                return LowResShellsTest.Shell != null;
+                return !DSPGame.IsMenuDemo && LowResShellsTest.Shell != null;
             else
                 throw new Exception("Unimplemented test context");
         }
