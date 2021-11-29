@@ -561,6 +561,18 @@ namespace DSPOptimizations
             {
                 __result.radius_lowRes = __result.orbitRadius;
             }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(GameSave), "LoadCurrentGame")]
+            [HarmonyAfter(new string[] { "crecheng.DSPModSave" })]
+            public static void DSPModSaveLoadingFix()
+            {
+                if (!LowResShellsSaveManager.loaded)
+                {
+                    LowResShellsSaveManager.IntoOtherSave();
+                    LowResShellsSaveManager.loaded = false;
+                }
+            }
         }
     }
 }

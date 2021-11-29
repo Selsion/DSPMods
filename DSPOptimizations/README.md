@@ -33,6 +33,8 @@ You will also need [DSPModSave v1.0.2](https://dsp.thunderstore.io/package/crech
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.0.1
+	- fixed issue where when first loading a save with low res shells when the .moddsv file exists from other mods, the low res shells import code isn't called
 - v1.0.0
 	- initial pre-release on github
 	- implemented low resolution shells

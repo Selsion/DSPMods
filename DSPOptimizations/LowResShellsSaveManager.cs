@@ -11,9 +11,11 @@ namespace DSPOptimizations
     {
 		private static MemoryStream stream;
 
+		public static bool loaded = false;
+
 		public static void ExportWrapper(BinaryWriter w)
         {
-            if (LowResShells.enabled)
+			if (LowResShells.enabled)
 			{
 				w.Write(1);
 				stream = new MemoryStream();
@@ -88,6 +90,8 @@ namespace DSPOptimizations
 					IntoOtherSave();
                 }
 			}
+
+			loaded = true;
         }
 
 		public static void Export(BinaryWriter w)
@@ -501,6 +505,8 @@ namespace DSPOptimizations
 				foreach (var sphere in spheres)
 					if (sphere != null)
 						ImportSphereGenerate(sphere);
+
+			loaded = true;
 		}
 	}
 }
