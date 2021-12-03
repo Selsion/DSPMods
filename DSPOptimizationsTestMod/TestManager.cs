@@ -76,7 +76,8 @@ namespace DSPOptimizationsTestMod
             if (context == TestContext.Any)
                 return true;
             else if (context == TestContext.DysonUI)
-                return DSPOptimizations.LowResShellsUI.InitializedUI;
+                return DSPOptimizations.LowResShellsUI.InitializedUI
+                    && UIRoot.instance?.uiGame?.dysonmap?.viewDysonSphere != null;
             else if (context == TestContext.SaveLoaded)
                 return DSPGame.Game != null && !DSPGame.IsMenuDemo;
             else if (context == TestContext.ExistsShell)

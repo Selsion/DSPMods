@@ -22,7 +22,7 @@ namespace DSPOptimizationsTestMod.Tests
         {
             LowResShellsTest.IterShells((DysonShell shell) =>
             {
-                LowResShells.SwapVertOffsetArrays(shell);
+                LowResShellsSaveManager.SwapVertOffsetArrays(shell);
             });
         }
 
@@ -148,7 +148,7 @@ namespace DSPOptimizationsTestMod.Tests
             //RunImport(GetExport());
             //DumpStream(export);
             RunImport(export);
-            return AllShellsValid();
+            return AllShellsValid(true);
         }
 
         [Test(TestContext.ExistsShell)]
@@ -222,12 +222,6 @@ namespace DSPOptimizationsTestMod.Tests
         // TODO: when should i actually wipe cps? need to be VERY careful with this
 
 
-
-
-        /*[Command("rares")]
-        public static string CmdRares(string param)
-        {
-            return GameMain.data.history.HasFeatureKey(1000112).ToString();
-        }*/
+        // TODO: make a test to detect that we swapped the arrays properly. didn't detect that only one swap was done
     }
 }

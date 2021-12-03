@@ -20,7 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.0.1";
+        public const string MOD_VERSION = "1.0.2";
 
         public static ConfigEntry<bool> writeOptimizedSave;
         public static ConfigEntry<bool> skipDraws;
@@ -30,24 +30,24 @@ namespace DSPOptimizations
 
         internal void Awake()
         {
-            //Directory.CreateDirectory("mmdump"); // or create it manually
-            //Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", "cecil"); // Also "mb" can work if mono runtime supports it; it can be a bit faster
-            //Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
-
             logger = Logger;
-
             harmony = new Harmony(MOD_GUID);
 
+#if DEBUG
+            Directory.CreateDirectory("mmdump"); // or create it manually
+            Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", "cecil"); // Also "mb" can work if mono runtime supports it; it can be a bit faster
+            Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
+#endif
             //harmony.PatchAll(typeof(NoShellDataPatch));
-
             LowResShells.Init(this, harmony);
+#if DEBUG
+            Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
+#endif
 
             if (Config.Bind<bool>("General", "disableShadows", false, "Set to true to disable shadows.").Value)
                 QualitySettings.shadows = ShadowQuality.Disable;
             else
                 QualitySettings.shadows = ShadowQuality.All;
-
-            //Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
         }
 
         public void OnDestroy()

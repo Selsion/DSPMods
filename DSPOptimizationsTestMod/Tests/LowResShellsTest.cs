@@ -158,6 +158,7 @@ namespace DSPOptimizationsTestMod.Tests
         {
             for (int i = 0; i < shell.vertexCount; i++)
                 shell.vertcps[i] = 2;
+            shell.buffer.SetData(shell.vertcps);
         }
 
         public static DysonShell Shell
@@ -209,8 +210,8 @@ namespace DSPOptimizationsTestMod.Tests
 
         public static bool ValidShell(DysonShell shell)
         {
-            if (shell.radius_lowRes != shell.parentLayer.radius_lowRes)
-                return false;
+            /*if (shell.radius_lowRes != shell.parentLayer.radius_lowRes)
+                return false;*/
             
             for (int j = 0; j < shell.vertsqOffset.Length; j++)
             {
