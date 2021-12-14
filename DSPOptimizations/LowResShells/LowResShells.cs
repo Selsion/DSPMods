@@ -28,7 +28,7 @@ namespace DSPOptimizations
                 LowResShellsSaveManager.Init(plugin, harmony);
 
                 // if multithreading enabled
-                //LowResShellsMultithreading.Init(plugin, harmony);
+                LowResShellsMultithreading.Init(plugin, harmony);
 
                 //harmony.PatchAll(typeof(LowResShellsDebug.Test));
             }
@@ -113,7 +113,8 @@ namespace DSPOptimizations
         public static void GenerateVanillaCPCountsPreserveNodeCP(DysonShell shell)
         {
             int[] oldCps = (int[])shell.nodecps.Clone();
-            Patch.GenerateVanillaCPCounts(shell);
+            //Patch.GenerateVanillaCPCounts(shell);
+            LowResShellsMultithreading.VanillaCPCountsWrapper(shell);
             shell.nodecps = oldCps;
         }
 
@@ -396,8 +397,9 @@ namespace DSPOptimizations
                 {
                     __instance.vertsqOffset_lowRes = (int[])__instance.vertsqOffset.Clone();
                     //NoShellDataPatch.genGeoVanillaCounts(ref __instance);
-                    if(__instance.radius_lowRes != __instance.parentLayer.orbitRadius)
-                        GenerateVanillaCPCounts(__instance);
+                    if (__instance.radius_lowRes != __instance.parentLayer.orbitRadius)
+                        LowResShellsMultithreading.VanillaCPCountsWrapper(__instance);
+                        //GenerateVanillaCPCounts(__instance);
                 }
             }
 

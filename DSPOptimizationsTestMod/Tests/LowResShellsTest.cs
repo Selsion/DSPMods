@@ -246,7 +246,7 @@ namespace DSPOptimizationsTestMod.Tests
                 {
                     Mod.logger.LogError(string.Format(
                         "Invalid shell {0}: radius_lowRes={1}, nodecps=[{2}], vertsqOffset=[{3}], vertsqOffset_lowRes=[{4}]",
-                        shell.id, string.Join(", ", shell.nodecps), string.Join(", ", shell.vertsqOffset), string.Join(", ", shell.vertsqOffset_lowRes)
+                        shell.id, shell.radius_lowRes, string.Join(", ", shell.nodecps), string.Join(", ", shell.vertsqOffset), string.Join(", ", shell.vertsqOffset_lowRes)
                     ));
 
                     return false;
@@ -292,6 +292,24 @@ namespace DSPOptimizationsTestMod.Tests
             LowResShells.RegenGeoLowRes(shell);
 
             //return cpCounts.SequenceEqual(shell.vertsqOffset_lowRes);
+            return cpCount == shell.vertsqOffset_lowRes[shell.vertsqOffset_lowRes.Length - 1];
+        }
+
+        [Test(TestContext.ExistsShell)]
+        public static bool CorrectVanillaCPMultithreaded()
+        {
+            var shell = Shell;
+
+            RandomRegen(shell);
+            LowResShellsMultithreading.VanillaCPCountsWrapper(shell);
+            int cpCount = shell.vertsqOffset[shell.vertsqOffset.Length - 1];
+            shell.parentLayer.radius_lowRes = shell.parentLayer.orbitRadius;
+            LowResShells.RegenGeoLowRes(shell);
+
+            /*Mod.logger.LogInfo(cpCount + ", " + shell.vertsqOffset_lowRes[shell.vertsqOffset_lowRes.Length - 1]);
+            for (int i = 0; i < shell.vertsqOffset.Length; i++)
+                UnityEngine.Debug.Log("i:" + i + " shell.vertsqOffset_lowRes[i]:" + shell.vertsqOffset_lowRes[i]);*/
+
             return cpCount == shell.vertsqOffset_lowRes[shell.vertsqOffset_lowRes.Length - 1];
         }
 

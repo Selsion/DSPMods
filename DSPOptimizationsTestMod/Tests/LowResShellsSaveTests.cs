@@ -148,7 +148,7 @@ namespace DSPOptimizationsTestMod.Tests
             //RunImport(GetExport());
             //DumpStream(export);
             RunImport(export);
-            return AllShellsValid(true);
+            return AllShellsValid();
         }
 
         [Test(TestContext.ExistsShell)]

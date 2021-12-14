@@ -5,34 +5,64 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
+using System.IO;
+
 namespace DSPOptimizations
 {
-    class LowResShellsMultithreading
+    public class LowResShellsMultithreading
     {
         private static int numThreads;
 
-        private static DysonShell[] jobPool;
+        //private static Thread[] threads;
+        //private static Task[] vcpTasks;
+        private static AutoResetEvent[] vcpCompleteEvents;
+        private static Dictionary<int, int> threadIdToId;
+        private static int nextThreadId;
+
+        /*private static DysonShell[] jobPool;
 
         private static Dictionary<int, Vector3>[] vmaps;
         private static Dictionary<int, int>[] ivmaps;
-        private static Dictionary<int, IntVector4>[] tmaps;
+        private static Dictionary<int, IntVector4>[] tmaps;*/
 
         private static int[][] vertsqOffsetArrs;
 
+        private static DysonShell currentShell;
+
         public static void Init(BaseUnityPlugin plugin, Harmony harmony)
         {
-            return; // TODO: as'lkdfjha;slkdkfj;alsdkfjh
+            //return; // TODO: as'lkdfjha;slkdkfj;alsdkfjh
 
             const int MAX_THREADS = MultithreadSystem.MAX_THREAD_COUNT;
-            vmaps = new Dictionary<int, Vector3>[MAX_THREADS];
+            /*vmaps = new Dictionary<int, Vector3>[MAX_THREADS];
             ivmaps = new Dictionary<int, int>[MAX_THREADS];
-            tmaps = new Dictionary<int, IntVector4>[MAX_THREADS];
+            tmaps = new Dictionary<int, IntVector4>[MAX_THREADS];*/
             vertsqOffsetArrs = new int[MAX_THREADS][];
 
             harmony.PatchAll(typeof(Patch));
+
+            //threads = new Thread[MAX_THREADS];
+            //vcpTasks = new Task[MAX_THREADS];
+            //threadIdToId = new Dictionary<int, int>();
+            vcpCompleteEvents = new AutoResetEvent[MAX_THREADS];
+
+            for (int i = 0; i < MAX_THREADS; i++)
+            {
+                //threads[i] = new Thread(new ThreadStart(RunThread));
+
+                //threads[i] = new Thread(new ParameterizedThreadStart(Patch.ParallelVanillaCPCounts));
+                //threads[i] = new Thread(Patch.ParallelVanillaCPCounts);
+                //threadIdToId.Add(threads[i].ManagedThreadId, i);
+
+                //vcpTasks[i] = new Task(() => Patch.ParallelVanillaCPCounts(currentShell));
+                //threadIdToId.Add(vcpTasks[i].Id, i);
+
+                vcpCompleteEvents[i] = new AutoResetEvent(true);
+            }
         }
 
         /** TODO:
@@ -52,22 +82,109 @@ namespace DSPOptimizations
 
         public static void VanillaCPCountsWrapper(DysonShell shell)
         {
-            if(numThreads == 1)
+            if(numThreads <= 1) // note: the game usesa value of 0 for 1 thread
             {
                 LowResShells.Patch.GenerateVanillaCPCounts(shell);
                 return;
             }
 
+            currentShell = shell;
+
             int numNodes = shell.nodes.Count;
-            for(int i = 0; i < numThreads; i++)
+            threadIdToId = new Dictionary<int, int>();
+            nextThreadId = 0;
+            for (int i = 0; i < numThreads; i++)
             {
-                vertsqOffsetArrs[i] = new int[numNodes];
+                vertsqOffsetArrs[i] = new int[numNodes + 1];
+                //threads[i] = new Thread(new ThreadStart(RunThread));
+                //threadIdToId[threads[i].ManagedThreadId] = i;
+                //threads[i].Start();//shell);
+                //vcpTasks[i].Start();
+                vcpCompleteEvents[i].Reset();
             }
+
+            for (int i = 0; i < numThreads; i++)
+                ThreadPool.QueueUserWorkItem(new WaitCallback(RunThread));
+
+            for (int i = 0; i < numThreads; i++)
+                vcpCompleteEvents[i].WaitOne();
+                //vcpTasks[i].Wait();
+                //threads[i].Join();
 
             // TODO: make the transpiler use the correct vertsqOffset array
             // TODO: add the strided indexing
             // TODO: aggregate the arrays
-            
+
+            //***
+
+            // note: shell.vertsqOffset can be null at this point // TODO: find out why, and if other things can be null
+            /*for (int i = 0; i < vertsqOffsetArrs[0].Length; i++)
+                for (int j = 0; j < numThreads; j++)
+                    UnityEngine.Debug.Log("i:" + i + " j:" + j + " v:" + vertsqOffsetArrs[j][i]);*/
+
+            //***
+
+            shell.vertsqOffset = new int[numNodes + 1];
+
+            for (int i = 0; i < shell.vertsqOffset.Length; i++)
+                for (int j = 0; j < numThreads; j++)
+                    shell.vertsqOffset[i] += vertsqOffsetArrs[j][i];
+
+            int numVerts = 0;
+            for (int i = 0; i < shell.vertsqOffset.Length; i++)
+                numVerts += shell.vertsqOffset[i];
+            for (int i = shell.vertsqOffset.Length - 1; i >= 0; i--)
+            {
+                shell.vertsqOffset[i] = numVerts;
+                if (i > 0)
+                    numVerts -= shell.vertsqOffset[i - 1];
+            }
+            Assert.Zero(numVerts);
+        }
+
+        private static void RunThread(object state = null)
+        {
+            //UnityEngine.Debug.Log(Thread.CurrentThread.ManagedThreadId);
+            int mappedThreadId = -1;
+            lock (threadIdToId) // TODO: this is gross. find another way to get the thread IDs
+            {
+                //mappedThreadId = threadIdToId.Count;
+                mappedThreadId = nextThreadId++; // apparently it reuses threads?
+                threadIdToId[Thread.CurrentThread.ManagedThreadId] = mappedThreadId;
+            }
+
+            Patch.ParallelVanillaCPCounts(currentShell);
+            vcpCompleteEvents[mappedThreadId].Set();
+        }
+
+        private struct IndexingInfo
+        {
+            public int startIdx, endIdx, loopWidth, threadID;
+        }
+
+        private static IndexingInfo GetThreadIndexingInfo(int num9)
+        {
+            IndexingInfo ret;
+
+            // pseudo-2d: each 1d loop is from -num9 to num9 inclusive
+            //      (num9*2+1)^2 = 4*num9^2 + 4*num9 + 1 indices
+            //      split these among <numThread> threads
+            ret.loopWidth = num9 * 2 + 1;
+            int numTasks = ret.loopWidth * ret.loopWidth;
+            int chunkSize = (numTasks - 1) / numThreads + 1; // rounds up
+
+            ret.threadID = threadIdToId[Thread.CurrentThread.ManagedThreadId];
+            //ret.threadID = Thread.CurrentThread.ManagedThreadId; // will all the thread IDs be from 0 to numThreads-1 ?
+            /*if (!Task.CurrentId.HasValue)
+                throw new Exception("Attempted to retrieve a task ID when a task is not being run");
+            ret.threadID = threadIdToId[Task.CurrentId ?? -1];*/
+
+            ret.startIdx = chunkSize * ret.threadID;
+            ret.endIdx = Math.Min(ret.startIdx + chunkSize, numTasks);
+
+            //DSPOptimizations.logger.LogInfo(string.Format("threadID:{0} start:{1} end:{2} loopWidth:{3} num9:{4}", ret.threadID, ret.startIdx, ret.endIdx, ret.loopWidth, num9));
+
+            return ret;
         }
 
         class Patch
@@ -94,10 +211,9 @@ namespace DSPOptimizations
                     matcher.MatchForward(true,
                         new CodeMatch(OpCodes.Ldarg_0),
                         new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.nodes))),
-                        new CodeMatch(OpCodes.Callvirt),//, AccessTools.Property(typeof(List<DysonNode>), nameof(List<DysonNode>.Count))),
+                        new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(List<DysonNode>), "get_Count")),
                         new CodeMatch(OpCodes.Stloc_S)
                     );
-                    object nodeCountCallOperand = matcher.Advance(-1).Operand;
                     object oldNodeCountVarOperand = matcher.Advance(1).Operand;
 
                     // remove the code that initializes the dictionaries - we don't need them
@@ -111,33 +227,54 @@ namespace DSPOptimizations
                     matcher.InsertAndAdvance(
                         new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.nodes))),
-                        new CodeInstruction(OpCodes.Callvirt, nodeCountCallOperand),//AccessTools.Property(typeof(List<DysonNode>), nameof(List<DysonNode>.Count))),
-                                                                                    //new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<DysonNode>), nameof(List<DysonNode>.Count))),
+                        new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<DysonNode>), "get_Count")),
                         new CodeInstruction(OpCodes.Stloc_S, nodeCountVar)
                     );
 
+                    var num9Operand = matcher.Operand;
+                    // we're just before the for loop. get the indexing info
+                    LocalBuilder indexingInfo = generator.DeclareLocal(typeof(IndexingInfo));
+                    matcher.Advance(1).InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(LowResShellsMultithreading), nameof(LowResShellsMultithreading.GetThreadIndexingInfo))),
+                        new CodeInstruction(OpCodes.Stloc_S, indexingInfo)
+                    );
+                    // we're using the ldloc call for num9 above. remove the negate for the start index and replace with our new start
+                    matcher.RemoveInstruction().InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Ldloc_S, indexingInfo),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(IndexingInfo), nameof(IndexingInfo.startIdx)))
+                    );
+                    object loopVarOperand = matcher.Operand;
+                    matcher.Advance(2).SetOpcodeAndAdvance(OpCodes.Nop).RemoveInstructions(3);
+
+                    // set p and q based on the pseudo-2d index
+                    LocalBuilder pVar = generator.DeclareLocal(typeof(int));
+                    LocalBuilder qVar = generator.DeclareLocal(typeof(int));
+                    matcher.InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Ldloc_S, loopVarOperand),
+                        new CodeInstruction(OpCodes.Ldloc_S, indexingInfo),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(IndexingInfo), nameof(IndexingInfo.loopWidth))),
+                        new CodeInstruction(OpCodes.Div),
+                        new CodeInstruction(OpCodes.Ldloc_S, num9Operand),
+                        new CodeInstruction(OpCodes.Sub),
+                        new CodeInstruction(OpCodes.Stloc_S, pVar),
+                        new CodeInstruction(OpCodes.Ldloc_S, loopVarOperand),
+                        new CodeInstruction(OpCodes.Ldloc_S, indexingInfo),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(IndexingInfo), nameof(IndexingInfo.loopWidth))),
+                        new CodeInstruction(OpCodes.Rem),
+                        new CodeInstruction(OpCodes.Ldloc_S, num9Operand),
+                        new CodeInstruction(OpCodes.Sub),
+                        new CodeInstruction(OpCodes.Stloc_S, qVar)
+                    );
+                    // replace the for loop variables with pVar and qVar
+                    matcher.SetOperandAndAdvance(pVar).Advance(1).SetOperandAndAdvance(qVar).Advance(5).SetOperandAndAdvance(qVar);
+
                     // find the two for-loop variables for making vertices. these are the "pqArr" entries "p" and "q"
-                    matcher.Advance(2);
+                    /*matcher.Advance(2);
                     object outerLoopVarOperand = matcher.Operand;
                     matcher.Advance(4);
-                    object innerLoopVarOperand = matcher.Operand;
+                    object innerLoopVarOperand = matcher.Operand;*/
 
                     // find the local variable that stores the current vertex's position
-                    // note: this commented code extracted the wrong variable
-                    /*matcher.MatchForward(true,
-                        new CodeMatch(OpCodes.Ldloc_S),
-                        new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(VectorLF3), nameof(VectorLF3.z))),
-                        new CodeMatch(OpCodes.Ldloc_S),
-                        new CodeMatch(OpCodes.Ldloc_S),
-                        new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(VectorLF3), nameof(VectorLF3.z))),
-                        new CodeMatch(OpCodes.Mul),
-                        new CodeMatch(OpCodes.Add),
-                        new CodeMatch(OpCodes.Newobj),
-                        new CodeMatch(OpCodes.Stloc_S),
-                        new CodeMatch(OpCodes.Ldloca_S),
-                        new CodeMatch(OpCodes.Call),//, AccessTools.Property(typeof(VectorLF3), nameof(VectorLF3.normalized))),
-                        new CodeMatch(OpCodes.Stloc_S)
-                    );*/
                     matcher.MatchForward(true, new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(Maths), nameof(Maths.RotateLF)))).Advance(1);
                     object vertexPosVarOperand = matcher.Operand;
 
@@ -149,6 +286,13 @@ namespace DSPOptimizations
                     Label loopEnd = (Label)matcher.Advance(-1).Operand;
                     object vecCastOperand = matcher.Advance(8).Operand;
 
+                    // fix the end of the for loop to be 1d and end at the right index
+                    matcher.Advance(2).SetOpcodeAndAdvance(OpCodes.Nop).RemoveInstructions(6).Advance(5);
+                    matcher.SetOperandAndAdvance(indexingInfo).InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(IndexingInfo), nameof(IndexingInfo.endIdx)))
+                    ).SetOpcodeAndAdvance(OpCodes.Blt); // note: it's normally Ble, but we want to end before endIdx otherwise we double-count that vertex
+
+                    //return matcher.InstructionEnumeration();
 
                     // find the code where we process the vertices and increment vertsqOffset
                     /*matcher.MatchForward(false,
@@ -163,20 +307,24 @@ namespace DSPOptimizations
                         new CodeMatch(OpCodes.Ldc_I4, 479001600)
                     ).Advance(-5).Advance(-17); // TODO: switch back to the original code above. this was used for debugging
                     // replace verts[idx] with the vertex pos from the local variable found above
+                    matcher.SetOpcodeAndAdvance(OpCodes.Nop); // there's a label here
                     matcher.Insert(new CodeInstruction(OpCodes.Ldloc_S, vertexPosVarOperand)).CreateLabel(out Label vertProcessBegin);
                     matcher.Advance(1)
-                    .SetOpcodeAndAdvance(OpCodes.Nop) // there's a label here
                     .SetInstructionAndAdvance(new CodeInstruction(OpCodes.Call, vecCastOperand))
                     .RemoveInstructions(2);
+
+                    //return matcher.InstructionEnumeration();
 
                     // replace the pqArr elements with the for-loop variables found above
                     ///*
                     matcher.Advance(7).RemoveInstructions(10).InsertAndAdvance(
-                        new CodeInstruction(OpCodes.Ldloc_S, outerLoopVarOperand),
-                        new CodeInstruction(OpCodes.Ldloc_S, innerLoopVarOperand)
+                        new CodeInstruction(OpCodes.Ldloc_S, pVar),
+                        new CodeInstruction(OpCodes.Ldloc_S, qVar)
                     );///*
+                    //return matcher.InstructionEnumeration();
                     // replace loading the local variable equal to nodeCount / 2 with nodeCount / 2
-                    matcher.Advance(2).RemoveInstruction().InsertAndAdvance(
+                    matcher.Advance(20).RemoveInstruction().InsertAndAdvance(
+                    //matcher.Advance(2).RemoveInstruction().InsertAndAdvance( // TODO: how did this error show up? don't we use this code elsewhere?
                         new CodeInstruction(OpCodes.Ldloc_S, nodeCountVar),
                         new CodeInstruction(OpCodes.Ldc_I4_2),
                         new CodeInstruction(OpCodes.Div)
@@ -189,8 +337,17 @@ namespace DSPOptimizations
                         new CodeMatch(OpCodes.Ldloc_S),
                         new CodeMatch(OpCodes.Stelem_I4)
                     ).SetOpcodeAndAdvance(OpCodes.Nop).RemoveInstructions(4);
+
+                    // replace shell.vertsqOffset with vertsqOffsetArrs[indexingInfo.threadId]
+                    matcher.RemoveInstructions(2).InsertAndAdvance(
+                        new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(LowResShellsMultithreading), nameof(vertsqOffsetArrs))),
+                        new CodeInstruction(OpCodes.Ldloc_S, indexingInfo),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(IndexingInfo), nameof(IndexingInfo.threadID))),
+                        new CodeInstruction(OpCodes.Ldelem_Ref)
+                    );
+
                     // add a jump back to our original code after incrementing vertsqOffset
-                    matcher.Advance(9).InsertAndAdvance(new CodeInstruction(OpCodes.Br, loopEnd));
+                    matcher.Advance(11).InsertAndAdvance(new CodeInstruction(OpCodes.Br, loopEnd));
                     // create a label for the beginning of the vertsqOffset aggregating code, which is right after the for-loop
                     //matcher.Advance(7).CreateLabel(out Label vertsqOffsetAggBegin);
                     
@@ -200,9 +357,10 @@ namespace DSPOptimizations
                     matcher.InsertAndAdvance(
                         new CodeInstruction(OpCodes.Br, vertProcessBegin)
                     );
+
                     // add a jump to the vertsqOffset aggregating code after the for-loops
                     //matcher.Advance(14).InsertAndAdvance(new CodeInstruction(OpCodes.Br, vertsqOffsetAggBegin));
-                    matcher.Advance(14).InsertAndAdvance(new CodeInstruction(OpCodes.Ret));
+                    matcher.Advance(9).InsertAndAdvance(new CodeInstruction(OpCodes.Ret));
 
                     // add a return statement at the end of the vertsqOffset aggregating code
                     /*matcher.MatchForward(false,

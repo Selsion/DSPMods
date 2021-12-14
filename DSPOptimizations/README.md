@@ -1,10 +1,5 @@
-﻿
-
-
-# DSPOptimizations Mod
+﻿# DSPOptimizations Mod
 This mod adds optimizations to DSP. Few optimizations are available currently, but more will be added in the future.
-
-Caution: Since this mod has just been released and few others have tested it, save your games under new filenames rather than overwriting the old ones. The save functionality has been thoroughly tested, and this mod only touches save data for dyson shells. The rest of the mod's data is stored in another file with the extension `.moddsv`. The mod should be able to recover from most possible issues, however it's hard to guarantee compatibility with other mods.
 
 ## Features
 ### Low Resolution Shells
@@ -16,8 +11,8 @@ The resolution is configured by specifying a sphere radius. Shell geometry will 
 
 To aid your choice in setting the shell resolution radius, the expected number of vertices after regenerating the entire layer with the given radius is shown. The memory and save file cost for your shells will be proportional to the vertex count. The current best estimates for these costs are 84 bytes of memory and 42 bytes of save file space per vertex. Setting the value to anything under 10km tends to work well. The minimum value of 1m will result in only 1 vertex per shell, which will hide the shells and contribute almost nothing to RAM and save file costs.
 
-Notes on performance: 
-- when a shell is first created, if it's made with a lower resolution than default then the mod will run a light-weight version of the vanilla mesh generation code to count the proper number of cell points. This can be slow for sphere layers with very high radii, such as 230km. Copying an entire sphere layer (with SphereEditorTools) at a radius of 238.8km when it is fully covered in shells can take just under 2 minutes, since there are around 130 million vertices to count. Normal-sized sphere layers or individual shell pieces will not take nearly as long, however. This will soon be alleviated with multithreading, which should reduce the generation time by a factor of around 8 to 24, depending on your CPU
+Notes on performance:
+- regenerating an entire sphere layer at a very high radius (e.g. 200km) may be slow. Multithreading will be added for this soon
 - spheres with a huge number of very tiny shells (e.g. 5000) might hurt your framerate when being rendered because of the high volume of draw calls. This can be fixed by regenerating with a resolution radius of 1m, which causes the draw calls to be skipped.
 - making geodesic frames rather than graticule frames might speed up node, frame, and shell creation, as well as shell regeneration
 
@@ -44,6 +39,10 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.0.4
+	- added multithreading for counting the number of cell points a shell would get in vanilla
+- v1.0.3
+	- moved the shell resolution panel up to fit on the screen when using a layout height of 900
 - v1.0.2
     - initial release on Thunderstore
     - fixed integer overflow bug when filling shell vertices with sails when regenerating

@@ -21,9 +21,21 @@ namespace DSPOptimizations
 
         private static bool initializedUI = false;
 
+        enum PanelPos
+        {
+            BottomLeft,
+            TopLeft,
+            TopRight,
+            BottomRight,
+            Custom
+        }
+
         public static void Init(BaseUnityPlugin plugin, Harmony harmony)
         {
             harmony.PatchAll(typeof(Patch));
+
+            //plugin.Config.Bind<PanelPos>("LowResShells", "LowResShellsPanelLayout", PanelPos.BottomLeft,
+              //  "Defines preset positions for the shell resolution UI panel. If you select Custom, then specify a position in LowResShellsPanelPos");
         }
 
         public static bool InitializedUI
@@ -41,13 +53,25 @@ namespace DSPOptimizations
             UnityEngine.Object.Destroy(expVertsLabelObj);
         }
 
+        private static Vector3 GetPanelPos()
+        {
+            //MainCamera mainCamera = GameObject.Find("Main Camera").GetComponentInChildren<MainCamera>();
+            //Camera camera = mainCamera._camera;
+
+            //DSPOptimizations.logger.LogWarning("layout height: " + DSPGame.globalOption.uiLayoutHeight);
+            if (DSPGame.globalOption.uiLayoutHeight < 1080)
+                return new Vector3(180f, -325f, 0f);
+            else
+                return new Vector3(180f, -360f, 0f);
+        }
+
         private static void CreateUI()
         {
             var shellGroup = GameObject.Find("UI Root/Always on Top/Overlay Canvas - Top/Dyson Editor Top/info-group/shell");
 
             var srcPanel = GameObject.Find("UI Root/Always on Top/Overlay Canvas - Top/Dyson Editor Top/info-group/screen-group/add-panel");
             resPanelObj = UnityEngine.Object.Instantiate(srcPanel, shellGroup.transform.position, Quaternion.identity, shellGroup.transform);
-            resPanelObj.transform.localPosition = new Vector3(180f, -360f, 0f);
+            resPanelObj.transform.localPosition = GetPanelPos();
             resPanelObj.name = "shell-resolution-panel";
             foreach (Transform child in resPanelObj.transform)
                 UnityEngine.Object.Destroy(child.gameObject);
@@ -171,6 +195,7 @@ namespace DSPOptimizations
                 return;
             }
 
+            // conventional flat area. tends to be accurate
             Vector3 p1 = shell.polygon[0].normalized;
             Vector3 sum = new Vector3(0f, 0f, 0f);
 
@@ -184,6 +209,30 @@ namespace DSPOptimizations
             }
 
             shell.surfaceAreaUnitSphere = sum.magnitude * 0.5f;
+
+
+            // spherical area. should be more accurate for larger shells (ignoring radius)
+            // note: this is only computed once per shell per play session, so the expensive operations are no big deal.
+            //       could simplify by not storing vectors, and instead recompute them
+            /*var poly = shell.polygon;
+            double angleSum = 0.0;
+            var currPos = poly[0].normalized;
+            var nextPos = poly[1].normalized;
+            var currNorm = Vector3.Cross(currPos, nextPos).normalized;
+
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var next2Pos = poly[(i + 2) % poly.Count].normalized;
+                var nextNorm = Vector3.Cross(nextPos, next2Pos).normalized;
+
+                angleSum += Math.Acos(-Vector3.Dot(currNorm, nextNorm));
+
+                //currPos = nextPos;
+                nextPos = next2Pos;
+                currNorm = nextNorm;
+            }
+
+            shell.surfaceAreaUnitSphere = (float)(Math.Abs(angleSum) - (poly.Count - 2) * Math.PI);*/
         }
 
         public class Patch
@@ -244,6 +293,16 @@ namespace DSPOptimizations
                 DysonShell shell = __instance.shellPool[shellId];
                 __instance.surfaceAreaUnitSphere -= shell.surfaceAreaUnitSphere;
                 UpdateLayer();
+            }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(UIOptionWindow), nameof(UIOptionWindow.ApplyOptions))]
+            public static void UpdatePanelPos()
+            {
+                if(resPanelObj?.transform != null)
+                {
+                    resPanelObj.transform.localPosition = GetPanelPos();
+                }
             }
         }
     }

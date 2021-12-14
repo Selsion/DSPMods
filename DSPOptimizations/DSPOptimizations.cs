@@ -20,7 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.0.2";
+        public const string MOD_VERSION = "1.0.4";
 
         public static ConfigEntry<bool> writeOptimizedSave;
         public static ConfigEntry<bool> skipDraws;
@@ -35,6 +35,10 @@ namespace DSPOptimizations
 
 #if DEBUG
             Directory.CreateDirectory("mmdump"); // or create it manually
+            foreach (FileInfo file in new DirectoryInfo("./mmdump").GetFiles())
+            {
+                file.Delete();
+            }
             Environment.SetEnvironmentVariable("MONOMOD_DMD_TYPE", "cecil"); // Also "mb" can work if mono runtime supports it; it can be a bit faster
             Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
 #endif
@@ -44,10 +48,11 @@ namespace DSPOptimizations
             Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
 #endif
 
+            // TODO: make this compatible with the MoreGraphicsOptions mod
             if (Config.Bind<bool>("General", "disableShadows", false, "Set to true to disable shadows.").Value)
                 QualitySettings.shadows = ShadowQuality.Disable;
-            else
-                QualitySettings.shadows = ShadowQuality.All;
+            /*else
+                QualitySettings.shadows = ShadowQuality.All;*/
         }
 
         public void OnDestroy()

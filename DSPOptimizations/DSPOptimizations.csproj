@@ -91,7 +91,6 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy /Y $(TargetPath) $(ProjectDir)\dist\plugins\$(TargetFileName)</PostBuildEvent>
   </PropertyGroup>
 </Project>
