@@ -17,8 +17,6 @@ namespace DSPOptimizations
     {
         private static int numThreads;
 
-        //private static Thread[] threads;
-        //private static Task[] vcpTasks;
         private static AutoResetEvent[] vcpCompleteEvents;
         private static Dictionary<int, int> threadIdToId;
         private static int nextThreadId;
@@ -35,8 +33,6 @@ namespace DSPOptimizations
 
         public static void Init(BaseUnityPlugin plugin, Harmony harmony)
         {
-            //return; // TODO: as'lkdfjha;slkdkfj;alsdkfjh
-
             const int MAX_THREADS = MultithreadSystem.MAX_THREAD_COUNT;
             /*vmaps = new Dictionary<int, Vector3>[MAX_THREADS];
             ivmaps = new Dictionary<int, int>[MAX_THREADS];
@@ -45,40 +41,13 @@ namespace DSPOptimizations
 
             harmony.PatchAll(typeof(Patch));
 
-            //threads = new Thread[MAX_THREADS];
-            //vcpTasks = new Task[MAX_THREADS];
-            //threadIdToId = new Dictionary<int, int>();
             vcpCompleteEvents = new AutoResetEvent[MAX_THREADS];
 
             for (int i = 0; i < MAX_THREADS; i++)
             {
-                //threads[i] = new Thread(new ThreadStart(RunThread));
-
-                //threads[i] = new Thread(new ParameterizedThreadStart(Patch.ParallelVanillaCPCounts));
-                //threads[i] = new Thread(Patch.ParallelVanillaCPCounts);
-                //threadIdToId.Add(threads[i].ManagedThreadId, i);
-
-                //vcpTasks[i] = new Task(() => Patch.ParallelVanillaCPCounts(currentShell));
-                //threadIdToId.Add(vcpTasks[i].Id, i);
-
                 vcpCompleteEvents[i] = new AutoResetEvent(true);
             }
         }
-
-        /** TODO:
-         * transpiler for vanilla cp gen setup (before the p,q for loops)
-         * initialize vertsqOffset for each thread
-         * run the two for loops as a pseudo-one-dimension for loop with a strided threading approach
-         * pool the different threads' vertsqOffset together, then finalize vertsqOffset
-         */
-
-
-        /** Alternative:
-         * use the same method as before, except get rid of the allocations for vertsqOffset and nodecps
-         * instead of vertsqOffset, use vertsqOffsetArrs[thread_id]
-         * return from the method after counting all the vertices
-         * aggregate all the vertsqOffset arrays into the final product separately
-         */
 
         public static void VanillaCPCountsWrapper(DysonShell shell)
         {
@@ -96,10 +65,6 @@ namespace DSPOptimizations
             for (int i = 0; i < numThreads; i++)
             {
                 vertsqOffsetArrs[i] = new int[numNodes + 1];
-                //threads[i] = new Thread(new ThreadStart(RunThread));
-                //threadIdToId[threads[i].ManagedThreadId] = i;
-                //threads[i].Start();//shell);
-                //vcpTasks[i].Start();
                 vcpCompleteEvents[i].Reset();
             }
 
@@ -108,21 +73,11 @@ namespace DSPOptimizations
 
             for (int i = 0; i < numThreads; i++)
                 vcpCompleteEvents[i].WaitOne();
-                //vcpTasks[i].Wait();
-                //threads[i].Join();
-
-            // TODO: make the transpiler use the correct vertsqOffset array
-            // TODO: add the strided indexing
-            // TODO: aggregate the arrays
-
-            //***
 
             // note: shell.vertsqOffset can be null at this point // TODO: find out why, and if other things can be null
             /*for (int i = 0; i < vertsqOffsetArrs[0].Length; i++)
                 for (int j = 0; j < numThreads; j++)
                     UnityEngine.Debug.Log("i:" + i + " j:" + j + " v:" + vertsqOffsetArrs[j][i]);*/
-
-            //***
 
             shell.vertsqOffset = new int[numNodes + 1];
 
@@ -144,11 +99,9 @@ namespace DSPOptimizations
 
         private static void RunThread(object state = null)
         {
-            //UnityEngine.Debug.Log(Thread.CurrentThread.ManagedThreadId);
             int mappedThreadId = -1;
             lock (threadIdToId) // TODO: this is gross. find another way to get the thread IDs
             {
-                //mappedThreadId = threadIdToId.Count;
                 mappedThreadId = nextThreadId++; // apparently it reuses threads?
                 threadIdToId[Thread.CurrentThread.ManagedThreadId] = mappedThreadId;
             }
@@ -174,10 +127,6 @@ namespace DSPOptimizations
             int chunkSize = (numTasks - 1) / numThreads + 1; // rounds up
 
             ret.threadID = threadIdToId[Thread.CurrentThread.ManagedThreadId];
-            //ret.threadID = Thread.CurrentThread.ManagedThreadId; // will all the thread IDs be from 0 to numThreads-1 ?
-            /*if (!Task.CurrentId.HasValue)
-                throw new Exception("Attempted to retrieve a task ID when a task is not being run");
-            ret.threadID = threadIdToId[Task.CurrentId ?? -1];*/
 
             ret.startIdx = chunkSize * ret.threadID;
             ret.endIdx = Math.Min(ret.startIdx + chunkSize, numTasks);
