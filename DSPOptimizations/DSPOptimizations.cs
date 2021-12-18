@@ -22,8 +22,9 @@ namespace DSPOptimizations
         public const string MOD_NAME = "DSPOptimizations";
         public const string MOD_VERSION = "1.0.4";
 
-        public static ConfigEntry<bool> writeOptimizedSave;
-        public static ConfigEntry<bool> skipDraws;
+        // TODO: why did i leave these here?
+        //public static ConfigEntry<bool> writeOptimizedSave;
+        //public static ConfigEntry<bool> skipDraws;
 
         private static Harmony harmony;
         public static ManualLogSource logger;

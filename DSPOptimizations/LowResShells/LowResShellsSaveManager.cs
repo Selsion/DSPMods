@@ -117,7 +117,12 @@ namespace DSPOptimizations
                 }
 			}
 
-			loaded = true;
+			// note: might have done this already if IntoOtherSave() was called
+			if (!loaded)
+			{
+				RecalcAllCpReq();
+				loaded = true;
+			}
         }
 
 		public static void Export(BinaryWriter w)
@@ -537,7 +542,21 @@ namespace DSPOptimizations
 					if (sphere != null)
 						ImportSphereGenerate(sphere);
 
+			RecalcAllCpReq();
 			loaded = true;
+		}
+
+		private static void RecalcAllCpReq()
+		{
+			var spheres = GameMain.data.dysonSpheres;
+			if (spheres != null)
+				foreach (var sphere in spheres)
+					if (sphere?.layersIdBased != null)
+						foreach (var layer in sphere.layersIdBased)
+							if (layer != null)
+								for (int i = 1; i < layer.nodeCursor; i++)
+									if (layer.nodePool[i] != null && layer.nodePool[i].id == i)
+										layer.nodePool[i].RecalcCpReq();
 		}
 
 		public static void SwapVertOffsetArrays(DysonShell shell)
