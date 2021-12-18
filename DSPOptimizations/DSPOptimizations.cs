@@ -20,7 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.0.4";
+        public const string MOD_VERSION = "1.0.5";
 
         // TODO: why did i leave these here?
         //public static ConfigEntry<bool> writeOptimizedSave;
