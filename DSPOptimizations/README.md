@@ -35,10 +35,55 @@ This mod depends on [DSPModSave](https://dsp.thunderstore.io/package/CommonAPI/D
 ## Compatibility
 This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunderstore.io/package/nebula/NebulaMultiplayerModApi/), however compatibility will be added in the future.
 
+## Planned Optimizations
+- [ ] Low Resolution Shells
+	- [x] Core functionality of reducing a shell's resolution
+	- [x] UI for choosing the resolution
+	- [x] Vanilla CP multithreading
+	- [ ] Compute vanilla CP counts instantly with computational geometry
+	- [ ] Multithreaded shell regeneration
+	- [ ] Integration with SphereEditorTools or upcoming vanilla UI changes
+- [ ] Dyson Node Logic
+	- [ ] Store CP and SP counts for each layer to avoid recomputing them for each tick
+	- [ ] Skip checking nodes that aren't being updated on a tick
+	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
+- [ ] Power Logic
+	- [ ] Store wind turbine generation to skip recomputing it every tick
+	- [ ] Store satellite substation consumption to skip recomputing it every tick
+	- [ ] Store solar panel generation on tidally locked planets to skip recomputing it every tick
+	- [ ] Create some sort of data structure to keep track of solar panel strength clamping partitions to optimize panels for all planets
+	- [ ] Consider adding multithreading to more power logic
+	- [ ] Consider changing PowerSystem.RequestDysonSpherePower() to use a smaller pool of RRs instead of the large gen pool
+- [ ] Storage Logic
+	- [ ] Add multithreading by grouping belts by item when connected to the same station
+- [ ] Factory Logic
+	- [ ] Add multithreading for labs
+	- [ ] Add multithreading for splitters
+	- [ ] Consider adding multithreading for monitors
+- [ ] Belts
+	- [ ] Use a new data structure for belts using offsets to minimize cpu time and sorter time
+	- [ ] Minimize save file space by taking advantage of the low number of different kinds of items on each belt
+	- [ ] Minimize save file space by recomputing rotation and position data
+- [ ] Mecha Drone Logic
+	- [ ] Consider using the recycle cursor to minimize the number of prebuilds to check
+	- [ ] Consider the option of using filters based on what prebuilds are left and what items the player has
+	- [ ] Add some spatial data structure to optimize the query for the closest prebuild
+	- [ ] Consider adding multithreading
+- [ ] Blueprints
+	- [ ] Optimize the rendering of planet-wide blueprints
+- [ ] Swarm Logic
+	- [ ] Optimize sail bullet logic (ejected sails)
+	- [ ] Consider adding the option to disable the swarm compute shader if it's only needed for visuals
+	- [ ] Consider adding multithreading
+- [ ] Save Cleaning
+	- [ ] Clean prebuild array after large blueprints are finished to improve permanent drone logic speed
+
 ## Bug Reports
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.0.5
+	- fixed bug where nodes might not queue sails for absorption after importing a modded save
 - v1.0.4
 	- added multithreading for counting the number of cell points a shell would get in vanilla
 - v1.0.3
