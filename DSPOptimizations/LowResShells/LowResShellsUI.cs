@@ -11,7 +11,8 @@ using HarmonyLib;
 
 namespace DSPOptimizations
 {
-    public class LowResShellsUI
+    [RunPatches(typeof(Patch))]
+    public class LowResShellsUI : OptimizationSet
     {
         internal static GameObject resPanelObj, resSliderObj, resValueObj, regenButtonObj, resLabelObj, expVertsLabelObj;
         public /*internal*/ static Slider resSlider;
@@ -20,6 +21,8 @@ namespace DSPOptimizations
         internal static Text expVertsText;
 
         private static bool initializedUI = false;
+
+        private static double vertArea = Math.Sqrt(3) * 3200;
 
         enum PanelPos
         {
@@ -30,20 +33,20 @@ namespace DSPOptimizations
             Custom
         }
 
-        public static void Init(BaseUnityPlugin plugin, Harmony harmony)
+        /*public static void Init(BaseUnityPlugin plugin)
         {
             harmony.PatchAll(typeof(Patch));
 
             //plugin.Config.Bind<PanelPos>("LowResShells", "LowResShellsPanelLayout", PanelPos.BottomLeft,
               //  "Defines preset positions for the shell resolution UI panel. If you select Custom, then specify a position in LowResShellsPanelPos");
-        }
+        }*/
 
         public static bool InitializedUI
         {
             get { return initializedUI; }
         }
 
-        public static void OnDestroy()
+        public override void OnDestroy()
         {
             UnityEngine.Object.Destroy(resPanelObj);
             UnityEngine.Object.Destroy(resSliderObj);
@@ -182,7 +185,7 @@ namespace DSPOptimizations
 
         private static long ExpectedVertexCount(DysonSphereLayer layer)
         {
-            long ret = (long)(layer.surfaceAreaUnitSphere * layer.radius_lowRes * layer.radius_lowRes / 5540f);
+            long ret = (long)(layer.surfaceAreaUnitSphere * layer.radius_lowRes * layer.radius_lowRes / vertArea);//5540f);
             if (ret < 0) // in case of floating point imprecision when adding and deleting shells
                 ret = 0;
             return ret;
@@ -195,8 +198,9 @@ namespace DSPOptimizations
                 return;
             }
 
-            // conventional flat area. tends to be accurate
-            Vector3 p1 = shell.polygon[0].normalized;
+            // conventional flat area. tends to be accurate.
+            // doesn't get the area for a fully covered sphere correctly, which should be 4*PI
+            /*Vector3 p1 = shell.polygon[0].normalized;
             Vector3 sum = new Vector3(0f, 0f, 0f);
 
             Vector3 pCurr = shell.polygon[1].normalized;
@@ -208,13 +212,13 @@ namespace DSPOptimizations
                 pCurr = pNext;
             }
 
-            shell.surfaceAreaUnitSphere = sum.magnitude * 0.5f;
+            shell.surfaceAreaUnitSphere = sum.magnitude * 0.5f;*/
 
 
-            // spherical area. should be more accurate for larger shells (ignoring radius)
+            // spherical area. should be more accurate
             // note: this is only computed once per shell per play session, so the expensive operations are no big deal.
             //       could simplify by not storing vectors, and instead recompute them
-            /*var poly = shell.polygon;
+            var poly = shell.polygon;
             double angleSum = 0.0;
             var currPos = poly[0].normalized;
             var nextPos = poly[1].normalized;
@@ -232,7 +236,7 @@ namespace DSPOptimizations
                 currNorm = nextNorm;
             }
 
-            shell.surfaceAreaUnitSphere = (float)(Math.Abs(angleSum) - (poly.Count - 2) * Math.PI);*/
+            shell.surfaceAreaUnitSphere = (float)(Math.Abs(angleSum) - (poly.Count - 2) * Math.PI);
         }
 
         public class Patch

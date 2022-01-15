@@ -13,7 +13,8 @@ using System.IO;
 
 namespace DSPOptimizations
 {
-    public class LowResShellsMultithreading
+    [RunPatches(typeof(Patch))]
+    public class LowResShellsMultithreading : OptimizationSet
     {
         private static int numThreads;
 
@@ -31,7 +32,7 @@ namespace DSPOptimizations
 
         private static DysonShell currentShell;
 
-        public static void Init(BaseUnityPlugin plugin, Harmony harmony)
+        public override void Init(BaseUnityPlugin plugin)
         {
             const int MAX_THREADS = MultithreadSystem.MAX_THREAD_COUNT;
             /*vmaps = new Dictionary<int, Vector3>[MAX_THREADS];
@@ -39,7 +40,7 @@ namespace DSPOptimizations
             tmaps = new Dictionary<int, IntVector4>[MAX_THREADS];*/
             vertsqOffsetArrs = new int[MAX_THREADS][];
 
-            harmony.PatchAll(typeof(Patch));
+            //harmony.PatchAll(typeof(Patch));
 
             vcpCompleteEvents = new AutoResetEvent[MAX_THREADS];
 
@@ -146,8 +147,6 @@ namespace DSPOptimizations
                 numThreads = __instance.usedThreadCnt;
             }
 
-
-            // TODO: finish this, and maybe refactor the transpilers?
             [HarmonyReversePatch]
             [HarmonyPatch(typeof(DysonShell), "GenerateGeometry")]
             public static void ParallelVanillaCPCounts(DysonShell shell)

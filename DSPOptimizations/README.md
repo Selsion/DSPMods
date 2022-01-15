@@ -47,6 +47,9 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [ ] Store CP and SP counts for each layer to avoid recomputing them for each tick
 	- [ ] Skip checking nodes that aren't being updated on a tick
 	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
+- [ ] Multithreading
+	- [ ] Reduce multithreading overhead (currently ~0.11ms of overhead per thread)
+	- [ ] Find and fix the bug where more threads are used then the pc can handle, if it exists
 - [ ] Power Logic
 	- [ ] Store wind turbine generation to skip recomputing it every tick
 	- [ ] Store satellite substation consumption to skip recomputing it every tick

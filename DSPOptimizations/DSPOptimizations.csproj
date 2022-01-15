@@ -74,12 +74,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DSPOptimizations.cs" />
+    <Compile Include="OptimizationSet\PatchManager.cs" />
+    <Compile Include="Plugin.cs" />
     <Compile Include="LowResShells\LowResShells.cs" />
     <Compile Include="LowResShells\LowResShellsDebug.cs" />
     <Compile Include="LowResShells\LowResShellsMultithreading.cs" />
     <Compile Include="LowResShells\LowResShellsSaveManager.cs" />
     <Compile Include="LowResShells\LowResShellsUI.cs" />
+    <Compile Include="OptimizationSet\ConfigValueAttribute.cs" />
+    <Compile Include="OptimizationSet\OptimizationAttribute.cs" />
+    <Compile Include="OptimizationSet\OptimizationSet.cs" />
+    <Compile Include="OptimizationSet\OptimizationSetManager.cs" />
+    <Compile Include="OptimizationSet\RunPatchesAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\CommandManager.cs" />
   </ItemGroup>

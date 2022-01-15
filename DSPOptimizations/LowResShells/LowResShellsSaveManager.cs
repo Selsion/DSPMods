@@ -9,7 +9,8 @@ using BepInEx;
 
 namespace DSPOptimizations
 {
-    public class LowResShellsSaveManager
+	[RunPatches(typeof(Patch))]
+    public class LowResShellsSaveManager : OptimizationSet
     {
 		private static MemoryStream stream;
 
@@ -20,7 +21,7 @@ namespace DSPOptimizations
 
 		public static void ExportWrapper(BinaryWriter w)
         {
-			if (LowResShells.enabled)
+			if (LowResShells.instance.Enabled)
 			{
 				try
 				{
@@ -35,7 +36,7 @@ namespace DSPOptimizations
 				}
 				catch (Exception e)
                 {
-					DSPOptimizations.logger.LogError("Failed to export current low res shells data to buffer. Error message: " + e.InnerException);
+					Plugin.logger.LogError("Failed to export current low res shells data to buffer. Error message: " + e.InnerException);
 					// we will try to write the old data that still lives in `stream`
 					w.Write(-1); // mark that LowResShells was enabled, but failed to write updated data
                 }
@@ -51,11 +52,11 @@ namespace DSPOptimizations
 				try
 				{
 					stream.WriteTo(w.BaseStream);
-					DSPOptimizations.logger.LogDebug(string.Format("Wrote {0} bytes to disk for LowResShells", stream.Length));
+					Plugin.logger.LogDebug(string.Format("Wrote {0} bytes to disk for LowResShells", stream.Length));
 				}
                 catch
                 {
-					DSPOptimizations.logger.LogError("CRITICAL ERROR: Failed to write LowResShells export buffer to output stream");
+					Plugin.logger.LogError("CRITICAL ERROR: Failed to write LowResShells export buffer to output stream");
 					throw;
 					// TODO: the wrong stream size will be written. how are we supposed to recover from this? can we be sure that this won't happen?
                 }
@@ -67,7 +68,7 @@ namespace DSPOptimizations
 			//DSPOptimizations.logger.LogWarning("Calling ImportWrapper()");
 			int wasEnabled = r.ReadInt32(); // is this even needed?
 			int streamLength = r.ReadInt32(); // CAUTION: the variable we're reading used to be a long
-			DSPOptimizations.logger.LogDebug(string.Format("LowResShells has {0} bytes to import", streamLength));
+			Plugin.logger.LogDebug(string.Format("LowResShells has {0} bytes to import", streamLength));
 			if (streamLength > 0)
 			{
 				stream = new MemoryStream();
@@ -79,7 +80,7 @@ namespace DSPOptimizations
 				//DSPOptimizations.logger.LogDebug("stream position: " + stream.Position);
 				stream.Position = 0;
 
-				if (LowResShells.enabled)
+				if (LowResShells.instance.Enabled)
 				{
 					try
 					{
@@ -87,7 +88,7 @@ namespace DSPOptimizations
 					}
 					catch (EndOfStreamException)
 					{
-						DSPOptimizations.logger.LogError(
+						Plugin.logger.LogError(
 							"Reached the end of the low res shells save data when reading." +
 							" The data is likely either corrupt or invalid and will be ignored." +
 							" New data will be generated."
@@ -97,7 +98,7 @@ namespace DSPOptimizations
 					}
 					catch(Exception e)
                     {
-						DSPOptimizations.logger.LogError(
+						Plugin.logger.LogError(
 							"Unhandled exception when loading low res shells data." +
 							" New data will be generated in place of the old data. Error message:\n"
 							+ e.InnerException
@@ -110,9 +111,9 @@ namespace DSPOptimizations
 			{
 				stream = null;
 
-                if (LowResShells.enabled)
+                if (LowResShells.instance.Enabled)
                 {
-					DSPOptimizations.logger.LogWarning("No low res shells save data exists. New data will be generated.");
+					Plugin.logger.LogWarning("No low res shells save data exists. New data will be generated.");
 					IntoOtherSave();
                 }
 			}
@@ -223,7 +224,7 @@ namespace DSPOptimizations
             {
 				// note: this will catch most data corruption errors.
 				// most of the others will be caught by EoF errors, which are handled by ImportWrapper
-				DSPOptimizations.logger.LogError(string.Format(
+				Plugin.logger.LogError(string.Format(
 					"Invalid shell save version: {0}. Shell save data will be discarded. New data will be generated.",
 					shellSaveVersion));
 				r.ReadBytes(streamLength - 4); // ignore the rest of the data
@@ -535,7 +536,7 @@ namespace DSPOptimizations
 
 		public static void IntoOtherSave()
 		{
-			DSPOptimizations.logger.LogWarning("Calling IntoOtherSave(). If this is your first time loading this save with LowResShells enabled, then ignore this warning.");
+			Plugin.logger.LogWarning("Calling IntoOtherSave(). If this is your first time loading this save with LowResShells enabled, then ignore this warning.");
 			var spheres = GameMain.data?.dysonSpheres;
 			if (spheres != null)
 				foreach (var sphere in spheres)
@@ -546,6 +547,7 @@ namespace DSPOptimizations
 			loaded = true;
 		}
 
+		// TODO: add unit tests to make sure this bug doesn't happen again
 		private static void RecalcAllCpReq()
 		{
 			var spheres = GameMain.data.dysonSpheres;
@@ -567,10 +569,10 @@ namespace DSPOptimizations
 			shell.vertsqOffset_lowRes = temp;
 		}
 
-		public static void Init(BaseUnityPlugin plugin, Harmony harmony)
+		/*public static void Init(BaseUnityPlugin plugin, Harmony harmony)
 		{
 			harmony.PatchAll(typeof(Patch));
-		}
+		}*/
 
 		class Patch
 		{
@@ -610,7 +612,7 @@ namespace DSPOptimizations
 
 				if (!loaded)
 				{
-					DSPOptimizations.logger.LogWarning("The mod initialization was not called properly for this save, but will now be loaded. Are you using the correct version of DSPModSave?");
+					Plugin.logger.LogWarning("The mod initialization was not called properly for this save, but will now be loaded. Are you using the correct version of DSPModSave?");
 					IntoOtherSave();
 				}
 				loaded = false;
@@ -632,12 +634,12 @@ namespace DSPOptimizations
             {
 				if(shellExportFailCount > 0)
                 {
-					DSPOptimizations.logger.LogError(string.Format("{0} shells had a null vertsqOffset_lowRes array", shellExportFailCount));
+					Plugin.logger.LogError(string.Format("{0} shells had a null vertsqOffset_lowRes array", shellExportFailCount));
 					shellExportFailCount = 0;
                 }
 				if (shellImportFailCount > 0)
 				{
-					DSPOptimizations.logger.LogError(string.Format("{0} shells required a full regen (includes vanilla cp counts)", shellImportFailCount));
+					Plugin.logger.LogError(string.Format("{0} shells required a full regen (includes vanilla cp counts)", shellImportFailCount));
 					shellImportFailCount = 0;
 				}
             }

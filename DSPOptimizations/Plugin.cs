@@ -16,7 +16,7 @@ namespace DSPOptimizations
     [BepInPlugin(MOD_GUID, MOD_NAME, MOD_VERSION)]
     [BepInProcess("DSPGAME.exe")]
     [BepInDependency("crecheng.DSPModSave")]
-    public class DSPOptimizations : BaseUnityPlugin, IModCanSave
+    public class Plugin : BaseUnityPlugin, IModCanSave
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
@@ -32,6 +32,9 @@ namespace DSPOptimizations
         internal void Awake()
         {
             logger = Logger;
+            CommandManager.Init();
+            OptimizationSetManager.Init(this);
+
             harmony = new Harmony(MOD_GUID);
 
 #if DEBUG
@@ -44,7 +47,8 @@ namespace DSPOptimizations
             Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", "mmdump");
 #endif
             //harmony.PatchAll(typeof(NoShellDataPatch));
-            LowResShells.Init(this, harmony);
+            //LowResShells.Init(this, harmony);
+            PatchManager.Init(harmony);
 #if DEBUG
             Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
 #endif
@@ -58,7 +62,9 @@ namespace DSPOptimizations
 
         public void OnDestroy()
         {
-            LowResShells.OnDestroy();
+            //LowResShells.OnDestroy();
+            OptimizationSetManager.OnDestroy();
+            CommandManager.OnDestroy();
             harmony?.UnpatchSelf();
         }
 

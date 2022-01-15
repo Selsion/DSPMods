@@ -10,35 +10,41 @@ using HarmonyLib;
 
 namespace DSPOptimizations
 {
-    public class LowResShells
+    [Optimization(name, desc, true, new Type[] { typeof(LowResShellsUI), typeof(LowResShellsSaveManager), typeof(LowResShellsMultithreading) })]
+    [RunPatches(typeof(Patch))]
+    public class LowResShells : OptimizationSet
     {
-        public static bool enabled = false; // TODO: what about mod saves when this is disabled?
+        //public static bool enabled = false; // TODO: what about mod saves when this is disabled?
+        public const string name = "LowResShells";
+        public const string desc = "Enables generating shell geometry with a lower resolution than normal. A layer's resolution is modified in the dyson sphere window."
+                                 + " This will modify the way shells are stored in save files, but modded saves should still be compatible with the vanilla game."
+                                 + " Additional save data will be stored in a file with the extension 'moddsv'.";
 
-        public static void Init(BaseUnityPlugin plugin, Harmony harmony)
+        public static LowResShells instance; // TODO: get rid of the need for this in the save manager
+
+        public override void Init(BaseUnityPlugin plugin)
         {
-            enabled = plugin.Config.Bind<bool>("LowResShells", "LowResolutionShells", true,
-                "Enables generating shell geometry with a lower resolution than normal. A layer's resolution is modified in the dyson sphere window."
-                + " This will modify the way shells are stored in save files, but modded saves should still be compatible with the vanilla game."
-                + " Additional save data will be stored in a file with the extension 'moddsv'.").Value;
+            instance = this;
+            enabled = plugin.Config.Bind<bool>(name, "LowResolutionShells", true, desc).Value; // TODO: change key to "enabled" and clean up config file
 
             if (enabled)
             {
-                harmony.PatchAll(typeof(Patch));
-                LowResShellsUI.Init(plugin, harmony);
-                LowResShellsSaveManager.Init(plugin, harmony);
+                //harmony.PatchAll(typeof(Patch));
+                //LowResShellsUI.Init(plugin, harmony);
+                //LowResShellsSaveManager.Init(plugin, harmony);
 
                 // if multithreading enabled
-                LowResShellsMultithreading.Init(plugin, harmony);
+                //LowResShellsMultithreading.Init(plugin, harmony);
 
                 //harmony.PatchAll(typeof(LowResShellsDebug.Test));
             }
         }
 
-        public static void OnDestroy()
+        /*public void OnDestroy()
         {
             if (enabled)
                 LowResShellsUI.OnDestroy();
-        }
+        }*/
 
         public static float ExpectedVerticesRelError(DysonShell shell)
         {
