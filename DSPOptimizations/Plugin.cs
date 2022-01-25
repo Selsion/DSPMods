@@ -20,11 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.0.5";
-
-        // TODO: why did i leave these here?
-        //public static ConfigEntry<bool> writeOptimizedSave;
-        //public static ConfigEntry<bool> skipDraws;
+        public const string MOD_VERSION = "1.1.0";
 
         private static Harmony harmony;
         public static ManualLogSource logger;
@@ -49,6 +45,7 @@ namespace DSPOptimizations
             //harmony.PatchAll(typeof(NoShellDataPatch));
             //LowResShells.Init(this, harmony);
             PatchManager.Init(harmony);
+            //LowResShellsLegacySupport.Init(harmony);
 #if DEBUG
             Environment.SetEnvironmentVariable("MONOMOD_DMD_DUMP", ""); // Disable to prevent dumping other stuff
 #endif
@@ -71,18 +68,26 @@ namespace DSPOptimizations
         // TODO: what if LowResShells isn't even enabled? we don't want to discard low res shell data, in case they enable it again
         void IModCanSave.Export(BinaryWriter w)
         {
-            int version = 1;
+            /*int version = 1;
             w.Write(version);
 
-            LowResShellsSaveManager.ExportWrapper(w);
+            LowResShellsSaveManager.ExportWrapper(w);*/
+
+            int version = 2;
+            w.Write(version);
         }
 
         void IModCanSave.Import(BinaryReader r)
         {
             int version = r.ReadInt32();
 
-            LowResShellsSaveManager.ImportWrapper(r);
-            //LowResShellsSaveManager.Import(r, -1);
+            if (version == 1)
+            {
+                LowResShellsSaveManager.ImportWrapper(r);
+            }
+
+            LowResShellsLegacySupport.UpdateShells();
+            DysonNodeOpt.InitSPAndCPCounts();
         }
 
         void IModCanSave.IntoOtherSave()
@@ -91,10 +96,13 @@ namespace DSPOptimizations
             // run code for when users delete the file
             // regen existing geo?
 
+            LowResShellsLegacySupport.UpdateShells();
+            DysonNodeOpt.InitSPAndCPCounts();
+
             if (DSPGame.IsMenuDemo)
                 return;
 
-            LowResShellsSaveManager.IntoOtherSave();
+            //LowResShellsSaveManager.IntoOtherSave();
         }
     }
 }

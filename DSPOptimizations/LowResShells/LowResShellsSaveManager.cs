@@ -9,8 +9,8 @@ using BepInEx;
 
 namespace DSPOptimizations
 {
-	[RunPatches(typeof(Patch))]
-    public class LowResShellsSaveManager : OptimizationSet
+	//[RunPatches(typeof(Patch))]
+    public class LowResShellsSaveManager// : OptimizationSet
     {
 		private static MemoryStream stream;
 
@@ -21,7 +21,7 @@ namespace DSPOptimizations
 
 		public static void ExportWrapper(BinaryWriter w)
         {
-			if (LowResShells.instance.Enabled)
+			if (true)//LowResShells.instance.Enabled)
 			{
 				try
 				{
@@ -80,7 +80,7 @@ namespace DSPOptimizations
 				//DSPOptimizations.logger.LogDebug("stream position: " + stream.Position);
 				stream.Position = 0;
 
-				if (LowResShells.instance.Enabled)
+				if (true)//LowResShells.instance.Enabled)
 				{
 					try
 					{
@@ -111,7 +111,7 @@ namespace DSPOptimizations
 			{
 				stream = null;
 
-                if (LowResShells.instance.Enabled)
+                if (true)//LowResShells.instance.Enabled)
                 {
 					Plugin.logger.LogWarning("No low res shells save data exists. New data will be generated.");
 					IntoOtherSave();
@@ -451,9 +451,9 @@ namespace DSPOptimizations
 
 			// different shells will usually have different surface areas. we can use this fact to
 			// identify when the shell changed
-			float shellSARelErr = (oldSA - shell.surfaceAreaUnitSphere) / shell.surfaceAreaUnitSphere;
+			//float shellSARelErr = (oldSA - shell.surfaceAreaUnitSphere) / shell.surfaceAreaUnitSphere;
 
-			if (arraysMatch && Math.Abs(shellSARelErr) < 0.01f)
+			if (arraysMatch)// && Math.Abs(shellSARelErr) < 0.01f)
 			{
 				shell.vertsqOffset_lowRes = oldOffsetsLowRes;
 				shell.vertsqOffset = oldOffsets;
@@ -496,8 +496,10 @@ namespace DSPOptimizations
 
 		private static void ImportShellGenerate(DysonShell shell, bool overrideFlag = false)
 		{
+			return;
+
 			//LowResShells.regenGeoLowRes(shell);
-			shell.radius_lowRes = shell.parentLayer.radius_lowRes;
+			/*shell.radius_lowRes = shell.parentLayer.radius_lowRes;
 			shell.vertsqOffset_lowRes = (int[])shell.vertsqOffset.Clone();
 
 			// try to detect when a user loads a save with low res shells, but deleted the .moddsv file
@@ -527,7 +529,7 @@ namespace DSPOptimizations
 			int cpSum = 0;
 			for (int i = 0; i < shell.nodes.Count; i++)
 				cpSum += shell.nodecps[i] = Math.Min(shell.nodecps[i], (shell.vertsqOffset[i + 1] - shell.vertsqOffset[i]) * 2);
-			shell.cellPoint = cpSum;
+			shell.cellPoint = cpSum;*/
 
 			// TODO: do we regen geometry as well?
 		}
@@ -569,11 +571,6 @@ namespace DSPOptimizations
 			shell.vertsqOffset_lowRes = temp;
 		}
 
-		/*public static void Init(BaseUnityPlugin plugin, Harmony harmony)
-		{
-			harmony.PatchAll(typeof(Patch));
-		}*/
-
 		class Patch
 		{
 
@@ -582,7 +579,7 @@ namespace DSPOptimizations
              * We swap the arrays back in the postfix patch.
              */
 
-			[HarmonyPrefix]
+			/*[HarmonyPrefix]
 			[HarmonyPatch(typeof(DysonShell), "Export")]
 			public static bool ExportPrefix(DysonShell __instance)
 			{
@@ -600,7 +597,7 @@ namespace DSPOptimizations
 			{
 				if (__instance.vertsqOffset_lowRes != null)
 					SwapVertOffsetArrays(__instance);
-			}
+			}*/
 
 			[HarmonyPostfix]
 			[HarmonyPatch(typeof(GameSave), "LoadCurrentGame")]

@@ -35,7 +35,8 @@ namespace DSPOptimizations
             var dysonSphereLayer = GetType(assembly, "DysonSphereLayer");
             dysonSphereLayer?.Fields?.Add(new FieldDefinition("radius_lowRes", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
             dysonSphereLayer?.Fields?.Add(new FieldDefinition("surfaceAreaUnitSphere", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
+            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalNodeSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
+            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalFrameSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
             dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalCP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
 
             logSource.LogInfo("Successfully ran preloader patch");
