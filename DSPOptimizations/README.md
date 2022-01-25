@@ -1,20 +1,11 @@
 ﻿# DSPOptimizations Mod
 This mod adds optimizations to DSP. Few optimizations are available currently, but more will be added in the future.
 
+## Important Notice
+The low resolution shells optimization is now obsolete with DSP v0.9. If you had lower resolution shells in your save, then the vanilla game will update them incorrectly. As of v1.0.6, this mod should update such modded shells correctly.
+
 ## Features
-### Low Resolution Shells
-![low_res_shells_1.gif](https://github.com/Selsion/DSPMods/blob/main/demos/low_res_shells_1.gif?raw=true)
-
-Dyson shells can be made with much fewer vertices than in the vanilla game. This can greatly reduce RAM and save file bloat, as well as help your framerate when a sphere is being rendered. In the dyson sphere editor, when a layer is selected you should see a box appear in the bottom-left side of your screen. This is for configuring the resolution of newly made shells in the selected layer. The button will regenerate all of the shells in the current layer with the given resolution.
-
-The resolution is configured by specifying a sphere radius. Shell geometry will be generated such that the resolution of the geometry will match that of spheres of this radius. For example, if you have a 200km radius sphere layer and set the shell resolution radius of the layer to 4km, then newly made shells will have as few vertices as if you were making a 4km sphere layer. Since the number of vertices in a shell is proportional to its surface area which is proportional to the square of the radius, in this example setting the shell resolution radius to 4km reduces the number of vertices by a factor of 2500.
-
-To aid your choice in setting the shell resolution radius, the expected number of vertices after regenerating the entire layer with the given radius is shown. The memory and save file cost for your shells will be proportional to the vertex count. The current best estimates for these costs are 84 bytes of memory and 42 bytes of save file space per vertex. Setting the value to anything under 10km tends to work well. The minimum value of 1m will result in only 1 vertex per shell, which will hide the shells and contribute almost nothing to RAM and save file costs.
-
-Notes on performance:
-- regenerating an entire sphere layer at a very high radius (e.g. 200km) may be slow. Multithreading will be added for this soon
-- spheres with a huge number of very tiny shells (e.g. 5000) might hurt your framerate when being rendered because of the high volume of draw calls. This can be fixed by regenerating with a resolution radius of 1m, which causes the draw calls to be skipped.
-- making geodesic frames rather than graticule frames might speed up node, frame, and shell creation, as well as shell regeneration
+- Dyson node logic has been optimized to take 20% as long
 
 ### Other
 - Shadows can be disabled in the config
@@ -27,7 +18,7 @@ You will first need to download the mod package, which can be found at the [rele
 
 Inside the mod package, you should see two folders named `plugins` and `patchers`. You should also see such folders in your BepInEx folder. Copy the DLLs found in those folders in the mod package into their respective folders in your BepInEx directory.
 
-You will also need [DSPModSave v1.1.0](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/) (the version under the CommonAPI name) installed. You can click on "Manual Download" on the linked site to download its package. The package should contain a single DLL, which goes into the `plugins` folder in your BepInEx directory.
+You will also need [DSPModSave v1.1.0](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/) (the version under the CommonAPI name) or later installed. You can click on "Manual Download" on the linked site to download its package. The package should contain a single DLL, which goes into the `plugins` folder in your BepInEx directory.
 
 ### Installation Note
 This mod depends on [DSPModSave](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/). Make sure that you have the version under the CommonAPI name, rather than the old version released by crecheng. The old version has bugs, and may cause problems. The old version of the mod is marked as deprecated.
@@ -36,16 +27,9 @@ This mod depends on [DSPModSave](https://dsp.thunderstore.io/package/CommonAPI/D
 This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunderstore.io/package/nebula/NebulaMultiplayerModApi/), however compatibility will be added in the future.
 
 ## Planned Optimizations
-- [ ] Low Resolution Shells
-	- [x] Core functionality of reducing a shell's resolution
-	- [x] UI for choosing the resolution
-	- [x] Vanilla CP multithreading
-	- [ ] Compute vanilla CP counts instantly with computational geometry
-	- [ ] Multithreaded shell regeneration
-	- [ ] Integration with SphereEditorTools or upcoming vanilla UI changes
 - [ ] Dyson Node Logic
-	- [ ] Store CP and SP counts for each layer to avoid recomputing them for each tick
-	- [ ] Skip checking nodes that aren't being updated on a tick
+	- [x] Store CP and SP counts for each layer to avoid recomputing them for each tick
+	- [x] Skip checking nodes that aren't being updated on a tick
 	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
 - [ ] Multithreading
 	- [ ] Reduce multithreading overhead (currently ~0.11ms of overhead per thread)
@@ -85,6 +69,10 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.0
+	- optimized dyson node logic
+- v1.0.6
+	- Removed the low resolution shells feature
 - v1.0.5
 	- fixed bug where nodes might not queue sails for absorption after importing a modded save
 - v1.0.4

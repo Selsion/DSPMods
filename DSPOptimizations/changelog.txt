@@ -1,0 +1,20 @@
+- v1.1.0
+	- optimized dyson node logic
+- v1.0.6
+	- Removed the low resolution shells feature
+- v1.0.5
+	- fixed bug where nodes might not queue sails for absorption after importing a modded save
+- v1.0.4
+	- added multithreading for counting the number of cell points a shell would get in vanilla
+- v1.0.3
+	- moved the shell resolution panel up to fit on the screen when using a layout height of 900
+- v1.0.2
+    - initial release on Thunderstore
+    - fixed integer overflow bug when filling shell vertices with sails when regenerating
+	- added more debug logging and error checking
+- v1.0.1
+	- fixed issue where when first loading a save with low res shells when the .moddsv file exists from other mods, the low res shells import code isn't called. using the new version of DSPModSave should also fix the issue
+- v1.0.0
+	- initial pre-release on github
+	- implemented low resolution shells
+	- added a config option to disable shadows
