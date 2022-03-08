@@ -39,6 +39,12 @@ namespace DSPOptimizations
             dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalFrameSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
             dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalCP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
 
+            var dysonSphereSegmentRenderer = GetType(assembly, "DysonSphereSegmentRenderer");
+            dysonSphereSegmentRenderer?.Fields?.Add(new FieldDefinition("layersDirtyMask", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int32.MakeArrayType()));
+
+            //var stationComponent = GetType(assembly, "StationComponent");
+            //stationComponent?.Fields?.Add(new FieldDefinition("factoryIndex", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int32));
+
             logSource.LogInfo("Successfully ran preloader patch");
         }
     }

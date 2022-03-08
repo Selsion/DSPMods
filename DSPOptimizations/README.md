@@ -5,7 +5,13 @@ This mod adds optimizations to DSP. Few optimizations are available currently, b
 The low resolution shells optimization is now obsolete with DSP v0.9. If you had lower resolution shells in your save, then the vanilla game will update them incorrectly. As of v1.0.6, this mod should update such modded shells correctly.
 
 ## Features
+- Dense spheres with shells now impact the game's framerate much less
+	- e.g. the framerate with a single sphere layer with 5240 shells with the game paused went from 8 fps to 24 fps
+- Multithreading is added for the logic controlling belts going in and out of stations
+		- this should greatly reduce the CPU time under the "Storage" category in the performance window
 - Dyson node logic has been optimized to take 20% as long
+- Hidden sphere layers under construction cause less lag
+- Shadows can be disabled in the config
 
 ### Other
 - Shadows can be disabled in the config
@@ -18,7 +24,7 @@ You will first need to download the mod package, which can be found at the [rele
 
 Inside the mod package, you should see two folders named `plugins` and `patchers`. You should also see such folders in your BepInEx folder. Copy the DLLs found in those folders in the mod package into their respective folders in your BepInEx directory.
 
-You will also need [DSPModSave v1.1.0](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/) (the version under the CommonAPI name) or later installed. You can click on "Manual Download" on the linked site to download its package. The package should contain a single DLL, which goes into the `plugins` folder in your BepInEx directory.
+You will also need [DSPModSave v1.1.3](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/) (the version under the CommonAPI name) or later installed. You can click on "Manual Download" on the linked site to download its package. The package should contain a single DLL, which goes into the `plugins` folder in your BepInEx directory.
 
 ### Installation Note
 This mod depends on [DSPModSave](https://dsp.thunderstore.io/package/CommonAPI/DSPModSave/). Make sure that you have the version under the CommonAPI name, rather than the old version released by crecheng. The old version has bugs, and may cause problems. The old version of the mod is marked as deprecated.
@@ -31,18 +37,23 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [x] Store CP and SP counts for each layer to avoid recomputing them for each tick
 	- [x] Skip checking nodes that aren't being updated on a tick
 	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
+- [ ] Dyson spheres
+	- [ ] Improve fps by batching shell draw calls
+	- [x] Improve fps by updating shader variables only when changed
+	- [x] Improve ups by not updating swarm compute shader buffers for hidden layers under construction
 - [ ] Multithreading
 	- [ ] Reduce multithreading overhead (currently ~0.11ms of overhead per thread)
 	- [ ] Find and fix the bug where more threads are used then the pc can handle, if it exists
 - [ ] Power Logic
+	- [ ] Fix issues (e.g. stack overflow) with large power networks
 	- [ ] Store wind turbine generation to skip recomputing it every tick
 	- [ ] Store satellite substation consumption to skip recomputing it every tick
 	- [ ] Store solar panel generation on tidally locked planets to skip recomputing it every tick
 	- [ ] Create some sort of data structure to keep track of solar panel strength clamping partitions to optimize panels for all planets
 	- [ ] Consider adding multithreading to more power logic
 	- [ ] Consider changing PowerSystem.RequestDysonSpherePower() to use a smaller pool of RRs instead of the large gen pool
-- [ ] Storage Logic
-	- [ ] Add multithreading by grouping belts by item when connected to the same station
+- [x] Storage Logic
+	- [x] Add multithreading for belts going in and out of stations
 - [ ] Factory Logic
 	- [ ] Add multithreading for labs
 	- [ ] Add multithreading for splitters
@@ -69,23 +80,18 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.5
+	- fixed a bug where selecting other saves in the save menu can reset storage multithreading info
+- v1.1.4
+	- fixed a bug where multithreading didn't work properly for PLSs. re-enabled storage multithreading
+- v1.1.3
+	- temporarily disabled the storage multithreading because of potential mod compatibility issues
+- v1.1.2
+	- added multithreading for station storage logic
+- v1.1.1
+	- improved fps for dense spheres by optimizing shell rendering
+	- reduced lag caused by shader buffers being synced when a hidden layer is under construction
 - v1.1.0
 	- optimized dyson node logic
 - v1.0.6
 	- Removed the low resolution shells feature
-- v1.0.5
-	- fixed bug where nodes might not queue sails for absorption after importing a modded save
-- v1.0.4
-	- added multithreading for counting the number of cell points a shell would get in vanilla
-- v1.0.3
-	- moved the shell resolution panel up to fit on the screen when using a layout height of 900
-- v1.0.2
-    - initial release on Thunderstore
-    - fixed integer overflow bug when filling shell vertices with sails when regenerating
-	- added more debug logging and error checking
-- v1.0.1
-	- fixed issue where when first loading a save with low res shells when the .moddsv file exists from other mods, the low res shells import code isn't called. using the new version of DSPModSave should also fix the issue
-- v1.0.0
-	- initial pre-release on github
-	- implemented low resolution shells
-	- added a config option to disable shadows

@@ -84,8 +84,13 @@
     <Compile Include="OptimizationSet\OptimizationSet.cs" />
     <Compile Include="OptimizationSet\OptimizationSetManager.cs" />
     <Compile Include="OptimizationSet\RunPatchesAttribute.cs" />
+    <Compile Include="PrebuildOpt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ShellShaderVarOpt.cs" />
+    <Compile Include="SphereBufferOpt.cs" />
+    <Compile Include="StationStorageOpt.cs" />
     <Compile Include="Utils\CommandManager.cs" />
+    <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">
