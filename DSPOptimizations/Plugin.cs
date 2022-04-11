@@ -28,7 +28,8 @@ namespace DSPOptimizations
         internal void Awake()
         {
             logger = Logger;
-            CommandManager.Init();
+            //CommandManager.Init();
+            CommandManager.QueueInit();
             OptimizationSetManager.Init(this);
 
             harmony = new Harmony(MOD_GUID);

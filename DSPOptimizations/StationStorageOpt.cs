@@ -110,7 +110,7 @@ namespace DSPOptimizations
                 if (factoryIdx < 0 || factoryIdx >= factorySizes.Length)
                     return;
 
-                int newTotalSize = stationIdMap.Length + newCapacity - __instance.stationCapacity;
+                int newTotalSize = stationIdMap.Length + newCapacity - factorySizes[factoryIdx]; //__instance.stationCapacity;
                 stationIdMap = new int[newTotalSize];
                 for (int i = 0; i < newTotalSize; i++)
                     stationIdMap[i] = i;

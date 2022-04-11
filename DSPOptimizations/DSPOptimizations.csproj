@@ -90,6 +90,7 @@
     <Compile Include="SphereBufferOpt.cs" />
     <Compile Include="StationStorageOpt.cs" />
     <Compile Include="Utils\CommandManager.cs" />
+    <Compile Include="Utils\SphereCommands.cs" />
     <Compile Include="Utils\Utils.cs" />
   </ItemGroup>
   <ItemGroup>

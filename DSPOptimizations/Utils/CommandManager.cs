@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -23,17 +24,37 @@ namespace DSPOptimizations
         }
     }
 
+    [RunPatches(typeof(Patch))]
     public class CommandManager
     {
         private static List<string> cmds;
         private static List<Assembly> srcAssm;
 
-        public static void Init(Assembly assm = null)
+        private static List<Assembly> initQueue;
+        private static bool initialized = false;
+
+        public static void QueueInit(Assembly assm = null)
+        {
+            if (initialized)
+            {
+                Init(assm);
+                return;
+            }
+
+            if (initQueue == null)
+                initQueue = new List<Assembly>();
+
+            initQueue.Add(assm);
+        }
+
+        private static void Init(Assembly assm)
         {
             if (assm == null)
                 assm = Assembly.GetExecutingAssembly();
-            cmds = new List<string>();
-            srcAssm = new List<Assembly>();
+            if(cmds == null)
+                cmds = new List<string>();
+            if(srcAssm == null)
+                srcAssm = new List<Assembly>();
             int total = FindCommands(assm);
 
             Plugin.logger.LogInfo(string.Format("{0} command{1} loaded from {2}", total, total == 1 ? "" : "s", assm.GetName().Name));
@@ -97,6 +118,18 @@ namespace DSPOptimizations
             }
 
             return total;
+        }
+
+        class Patch
+        {
+            [HarmonyPostfix, HarmonyPatch(typeof(XConsole), nameof(XConsole.InitCommands))]
+            public static void InitCommandsPostfix()
+            {
+                foreach (var assm in initQueue)
+                    Init(assm);
+                initQueue.Clear();
+                initialized = true;
+            }
         }
     }
 }

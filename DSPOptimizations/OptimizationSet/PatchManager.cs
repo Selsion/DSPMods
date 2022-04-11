@@ -14,7 +14,7 @@ namespace DSPOptimizations
         {
             var assm = Assembly.GetExecutingAssembly();
             foreach (var type in assm.GetTypes())
-                if (type.IsSubclassOf(typeof(OptimizationSet)))
+                //if (type.IsSubclassOf(typeof(OptimizationSet)))
                     foreach(var attr in type.GetCustomAttributes())
                         if(attr is RunPatchesAttribute)
                             harmony.PatchAll((attr as RunPatchesAttribute).Patches);
