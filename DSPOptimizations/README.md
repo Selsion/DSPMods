@@ -8,13 +8,26 @@ The low resolution shells optimization is now obsolete with DSP v0.9. If you had
 - Dense spheres with shells now impact the game's framerate much less
 	- e.g. the framerate with a single sphere layer with 5240 shells with the game paused went from 8 fps to 24 fps
 - Multithreading is added for the logic controlling belts going in and out of stations
-		- this should greatly reduce the CPU time under the "Storage" category in the performance window
+	- this should greatly reduce the CPU time under the "Storage" category in the performance window
 - Dyson node logic has been optimized to take 20% as long
 - Hidden sphere layers under construction cause less lag
 - Shadows can be disabled in the config
 
-### Other
-- Shadows can be disabled in the config
+## Commands
+The following commands may be used with the [developer console](https://dsp-wiki.com/Developer_Console):
+- `-resetLocalFactory`
+	- completely resets the factory data for the nearby planet. This can eliminate lag that would have persisted even after deleting all buildings
+	- requires a planet to be loaded
+	- does not reset terrain, vegetation, or veins
+- `-resetLocalSwarm`
+	- completely resets all swarms for the nearby star, deleting all sails. This can eliminate permanent save bloat
+	- requires the player to be near a star (within ~2 lyrs - the star name should be visible in the bottom left)
+- `-resetLocalSphereLayer layerId`
+	- instantly deletes a sphere layer without releasing sails
+	- requires the player to be near a star (within ~2 lyrs - the star name should be visible in the bottom left)
+	- `layerId` should be an integer between 1 and 10 corresponding to the ID of the sphere layer you wish to delete
+- `-resetAllSpheresAndSwarms`
+	- instantly deletes all dyson spheres and swarms for all stars. No sails will be released
 
 ## Installation
 This mod has a [Thunderstore release](https://dsp.thunderstore.io/package/Selsion/DSPOptimizations/). It's recommended that you install it with [r2modman](https://dsp.thunderstore.io/package/ebkr/r2modman/) or another mod manager.
@@ -41,9 +54,12 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [ ] Improve fps by batching shell draw calls
 	- [x] Improve fps by updating shader variables only when changed
 	- [x] Improve ups by not updating swarm compute shader buffers for hidden layers under construction
+- [x] Commands
+	- [x] Factory reset command
+	- [x] Swarm reset command
+	- [x] Sphere reset command
 - [ ] Multithreading
 	- [ ] Reduce multithreading overhead (currently ~0.11ms of overhead per thread)
-	- [ ] Find and fix the bug where more threads are used then the pc can handle, if it exists
 - [ ] Power Logic
 	- [ ] Fix issues (e.g. stack overflow) with large power networks
 	- [ ] Store wind turbine generation to skip recomputing it every tick
@@ -67,19 +83,18 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [ ] Consider the option of using filters based on what prebuilds are left and what items the player has
 	- [ ] Add some spatial data structure to optimize the query for the closest prebuild
 	- [ ] Consider adding multithreading
-- [ ] Blueprints
-	- [ ] Optimize the rendering of planet-wide blueprints
 - [ ] Swarm Logic
 	- [ ] Optimize sail bullet logic (ejected sails)
 	- [ ] Consider adding the option to disable the swarm compute shader if it's only needed for visuals
 	- [ ] Consider adding multithreading
-- [ ] Save Cleaning
-	- [ ] Clean prebuild array after large blueprints are finished to improve permanent drone logic speed
 
 ## Bug Reports
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.6
+	- added a compatibility fix for the black box mod
+	- added factory, swarm, and sphere reset commands
 - v1.1.5
 	- fixed a bug where selecting other saves in the save menu can reset storage multithreading info
 - v1.1.4

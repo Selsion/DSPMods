@@ -1,3 +1,6 @@
+- v1.1.6
+	- added a compatibility fix for the black box mod
+	- added factory, swarm, and sphere reset commands
 - v1.1.5
 	- fixed a bug where selecting other saves in the save menu can reset storage multithreading info
 - v1.1.4
