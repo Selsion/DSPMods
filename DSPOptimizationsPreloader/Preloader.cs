@@ -27,25 +27,36 @@ namespace DSPOptimizations
 
         public static void Patch(AssemblyDefinition assembly)
         {
-            var dysonShell = GetType(assembly, "DysonShell");
-            dysonShell?.Fields?.Add(new FieldDefinition("vertsqOffset_lowRes", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int32.MakeArrayType()));
-            dysonShell?.Fields?.Add(new FieldDefinition("radius_lowRes", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
-            dysonShell?.Fields?.Add(new FieldDefinition("surfaceAreaUnitSphere", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
+            var typeSystem = assembly.MainModule.TypeSystem;
 
-            var dysonSphereLayer = GetType(assembly, "DysonSphereLayer");
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("radius_lowRes", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("surfaceAreaUnitSphere", FieldAttributes.Public, assembly.MainModule.TypeSystem.Single));
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalNodeSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalFrameSP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
-            dysonSphereLayer?.Fields?.Add(new FieldDefinition("totalCP", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int64));
+            GetType(assembly, "DysonShell")
+            ?.AddField("vertsqOffset_lowRes", typeSystem.Int32.MakeArrayType())
+            ?.AddField("radius_lowRes", typeSystem.Single)
+            ?.AddField("surfaceAreaUnitSphere", typeSystem.Single);
 
-            var dysonSphereSegmentRenderer = GetType(assembly, "DysonSphereSegmentRenderer");
-            dysonSphereSegmentRenderer?.Fields?.Add(new FieldDefinition("layersDirtyMask", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int32.MakeArrayType()));
+            GetType(assembly, "DysonSphereLayer")
+            ?.AddField("radius_lowRes", typeSystem.Single)
+            ?.AddField("surfaceAreaUnitSphere", typeSystem.Single)
+            ?.AddField("totalNodeSP", typeSystem.Int64)
+            ?.AddField("totalFrameSP", typeSystem.Int64)
+            ?.AddField("totalCP", typeSystem.Int64);
 
-            //var stationComponent = GetType(assembly, "StationComponent");
-            //stationComponent?.Fields?.Add(new FieldDefinition("factoryIndex", FieldAttributes.Public, assembly.MainModule.TypeSystem.Int32));
+            GetType(assembly, "DysonSphereSegmentRenderer")
+            ?.AddField("layersDirtyMask", typeSystem.Int32.MakeArrayType());
+
+            //GetType(assembly, "StationComponent")
+            //?.AddField("factoryIndex", typeSystem.Int32);
 
             logSource.LogInfo("Successfully ran preloader patch");
+        }
+    }
+
+    public static class PreloaderExtensions
+    {
+        public static TypeDefinition AddField(this TypeDefinition type, string name, TypeReference fieldType, FieldAttributes attr = FieldAttributes.Public)
+        {
+            type.Fields.Add(new FieldDefinition(name, attr, fieldType));
+            return type;
         }
     }
 }
