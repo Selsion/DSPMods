@@ -95,6 +95,20 @@ namespace DSPOptimizations
 					new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(DysonSphere), nameof(DysonSphere.renderPlace)))
 				);
 
+				matcher.MatchForward(true,
+					new CodeMatch(OpCodes.Ldarg_0),
+					new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSwarm), nameof(DysonSwarm.bulletBuffer))),
+					new CodeMatch(OpCodes.Ldarg_0),
+					new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSwarm), nameof(DysonSwarm.bulletPool))),
+					new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(ComputeBuffer), nameof(ComputeBuffer.SetData), new[] { typeof(System.Array) }))
+				).Advance(1).CreateLabel(out Label methodEnd).Advance(-5)
+				.SetOpcodeAndAdvance(OpCodes.Nop) // there's a label here, so move the instruction
+				.InsertAndAdvance(
+					new CodeInstruction(OpCodes.Ldloc_S, sailsVisibleVar),
+					new CodeInstruction(OpCodes.Brfalse_S, methodEnd),
+					new CodeInstruction(OpCodes.Ldarg_0)
+				);
+
 				return matcher.InstructionEnumeration();
 			}
 
