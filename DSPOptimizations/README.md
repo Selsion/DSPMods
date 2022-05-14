@@ -9,6 +9,7 @@ The low resolution shells optimization is now obsolete with DSP v0.9. If you had
 	- e.g. the framerate with a single sphere layer with 5240 shells with the game paused went from 8 fps to 24 fps
 - Multithreading is added for the logic controlling belts going in and out of stations
 	- this should greatly reduce the CPU time under the "Storage" category in the performance window
+- Ejected sails will impact UPS much less (~30%) when not visible. You can choose to always hide them in the config
 - Dyson node logic has been optimized to take 20% as long
 - Hidden sphere layers under construction cause less lag
 - Shadows can be disabled in the config
@@ -28,6 +29,7 @@ The following commands may be used with the [developer console](https://dsp-wiki
 	- `layerId` should be an integer between 1 and 10 corresponding to the ID of the sphere layer you wish to delete
 - `-resetAllSpheresAndSwarms`
 	- instantly deletes all dyson spheres and swarms for all stars. No sails will be released
+	- if you have the dyson editor open while running this command, reopen it to see the changes
 
 ## Installation
 This mod has a [Thunderstore release](https://dsp.thunderstore.io/package/Selsion/DSPOptimizations/). It's recommended that you install it with [r2modman](https://dsp.thunderstore.io/package/ebkr/r2modman/) or another mod manager.
@@ -50,6 +52,7 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [x] Store CP and SP counts for each layer to avoid recomputing them for each tick
 	- [x] Skip checking nodes that aren't being updated on a tick
 	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
+	- [ ] Skip updating the node colours on each tick, and instead update them on change
 - [ ] Dyson spheres
 	- [ ] Improve fps by batching shell draw calls
 	- [x] Improve fps by updating shader variables only when changed
@@ -84,7 +87,7 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 	- [ ] Add some spatial data structure to optimize the query for the closest prebuild
 	- [ ] Consider adding multithreading
 - [ ] Swarm Logic
-	- [ ] Optimize sail bullet logic (ejected sails)
+	- [x] Optimize sail bullet logic (ejected sails)
 	- [ ] Consider adding the option to disable the swarm compute shader if it's only needed for visuals
 	- [ ] Consider adding multithreading
 
@@ -92,6 +95,8 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.7
+	- added optimization for ejected sails along with the option to hide them
 - v1.1.6
 	- added a compatibility fix for the black box mod
 	- added factory, swarm, and sphere reset commands

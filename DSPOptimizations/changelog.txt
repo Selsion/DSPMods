@@ -1,3 +1,5 @@
+- v1.1.7
+	- added optimization for ejected sails along with the option to hide them
 - v1.1.6
 	- added a compatibility fix for the black box mod
 	- added factory, swarm, and sphere reset commands
