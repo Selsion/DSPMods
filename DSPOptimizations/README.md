@@ -95,6 +95,10 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.8
+	- further optimization ejected sails down to ~15% of normal cpu time
+	- fixed bug with swarm gpu stats
+	- optimized dyson nodes to not update their colour on tick. should further improve ups for dense spheres
 - v1.1.7
 	- added optimization for ejected sails along with the option to hide them
 - v1.1.6

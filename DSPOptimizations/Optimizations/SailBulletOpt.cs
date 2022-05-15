@@ -118,6 +118,7 @@ namespace DSPOptimizations
 				CodeMatcher matcher = new CodeMatcher(instructions, generator);
 
 				matcher.MatchForward(false,
+					new CodeMatch(OpCodes.Ldarg_0),
 					new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(DysonSwarm), nameof(DysonSwarm.GpuAnalysisPost)))
 				).CreateLabel(out Label end)
 				.Start().MatchForward(false,

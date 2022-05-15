@@ -74,7 +74,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DysonNodeOpt.cs" />
+    <Compile Include="Optimizations\DysonNodeOpt.cs" />
     <Compile Include="LowResShells\LowResShellsLegacySupport.cs" />
     <Compile Include="OptimizationSet\PatchManager.cs" />
     <Compile Include="Plugin.cs" />
@@ -84,13 +84,13 @@
     <Compile Include="OptimizationSet\OptimizationSet.cs" />
     <Compile Include="OptimizationSet\OptimizationSetManager.cs" />
     <Compile Include="OptimizationSet\RunPatchesAttribute.cs" />
-    <Compile Include="PowerConsumerOpt.cs" />
-    <Compile Include="PrebuildOpt.cs" />
+    <Compile Include="Optimizations\PowerConsumerOpt.cs" />
+    <Compile Include="Optimizations\PrebuildOpt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SailBulletOpt.cs" />
-    <Compile Include="ShellShaderVarOpt.cs" />
-    <Compile Include="SphereBufferOpt.cs" />
-    <Compile Include="StationStorageOpt.cs" />
+    <Compile Include="Optimizations\SailBulletOpt.cs" />
+    <Compile Include="Optimizations\ShellShaderVarOpt.cs" />
+    <Compile Include="Optimizations\SphereBufferOpt.cs" />
+    <Compile Include="Optimizations\StationStorageOpt.cs" />
     <Compile Include="Utils\CommandManager.cs" />
     <Compile Include="Utils\FactoryCommands.cs" />
     <Compile Include="Utils\SphereCommands.cs" />

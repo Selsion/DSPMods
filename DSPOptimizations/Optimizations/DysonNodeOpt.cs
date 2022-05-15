@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace DSPOptimizations
 {
@@ -89,10 +90,6 @@ namespace DSPOptimizations
 
                 return matcher.InstructionEnumeration();
             }
-
-            /*[HarmonyPostfix]
-            [HarmonyPatch(typeof(DysonSphereLayer), "Import")]
-            public static void DysonSphereLayere_Import_Postfix(DysonSphereLayer __instance)*/
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(DysonSphere), "UpdateProgress", new[] { typeof(DysonNode) })]
@@ -187,6 +184,32 @@ namespace DSPOptimizations
                     new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphere), nameof(DysonSphere.grossRadius)))
                     //new CodeMatch(OpCodes.Ble_Un_S)
                 ).Advance(1).SetOperandAndAdvance(start);
+
+                return matcher.InstructionEnumeration();
+            }
+
+            [HarmonyPostfix]
+            [HarmonyPatch(typeof(DysonSphere), "AddDysonNodeRData")]
+            [HarmonyPatch(typeof(DysonSphere), "UpdateColor", new[] { typeof(DysonNode) })]
+            public static void UpdateColourPostfix(DysonSphere __instance, DysonNode node)
+            {
+                Color.RGBToHSV(node.color, out float x, out float y, out float z);
+                __instance.nrdPool[node.rid].color = new Vector4(x, y, z, node.color.a);
+            }
+
+            [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphere), "GameTick")]
+            static IEnumerable<CodeInstruction> ColourGameTickPatch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                CodeMatcher matcher = new CodeMatcher(instructions, generator);
+
+                matcher.MatchForward(false,
+                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(DysonSphere), nameof(DysonSphere.FindNode)))
+                ).Advance(3);
+                Label loopEnd = (Label)matcher.Operand;
+
+                matcher.Advance(-10).InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Br, loopEnd)
+                );
 
                 return matcher.InstructionEnumeration();
             }
