@@ -62,6 +62,46 @@ namespace DSPOptimizations
 
                 return matcher.InstructionEnumeration();
             }
+
+            [HarmonyTranspiler]
+            [HarmonyPatch(typeof(UIDEToolbox), nameof(UIDEToolbox.OnColorChange))]
+            static IEnumerable<CodeInstruction> UpdateShellColourPatch1(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                CodeMatcher matcher = new CodeMatcher(instructions, generator);
+
+                // add a call to SetMaterialDynamicVars() after the colour is updated
+                matcher.MatchForward(true,
+                    new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.color)))
+                ).Advance(-1).InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Dup)
+                ).Advance(2).InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(DysonShell), nameof(DysonShell.SetMaterialDynamicVars)))
+                );
+
+                return matcher.InstructionEnumeration();
+            }
+
+            [HarmonyTranspiler]
+            [HarmonyPatch(typeof(UIDysonBrush_Paint), nameof(UIDysonBrush_Paint._OnUpdate))]
+            static IEnumerable<CodeInstruction> UpdateShellColourPatch2(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                CodeMatcher matcher = new CodeMatcher(instructions, generator);
+
+                // add a call to SetMaterialDynamicVars() after the colour is updated
+                matcher.MatchForward(true,
+                    new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.color)))
+                ).Advance(-12);
+
+                var shellVarOpCode = matcher.Opcode;
+                var shellVarOperand = matcher.Operand;
+
+                matcher.Advance(13).InsertAndAdvance(
+                    new CodeInstruction(shellVarOpCode, shellVarOperand),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(DysonShell), nameof(DysonShell.SetMaterialDynamicVars)))
+                );
+
+                return matcher.InstructionEnumeration();
+            }
         }
     }
 }
