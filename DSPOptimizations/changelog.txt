@@ -1,3 +1,6 @@
+- v1.1.9
+	- fixed vanilla bug where splitters and pilers may have their performance stats counted twice for the last factory
+	- fixed bug where dyson shell colours aren't updated immediately
 - v1.1.8
 	- further optimization ejected sails down to ~15% of normal cpu time
 	- fixed bug with swarm gpu stats

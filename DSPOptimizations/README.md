@@ -95,6 +95,9 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.9
+	- fixed vanilla bug where splitters and pilers may have their performance stats counted twice for the last factory
+	- fixed bug where dyson shell colours aren't updated immediately
 - v1.1.8
 	- further optimization ejected sails down to ~15% of normal cpu time
 	- fixed bug with swarm gpu stats
@@ -106,16 +109,5 @@ If you have any bugs or issues to report, then either contact me on discord at S
 	- added factory, swarm, and sphere reset commands
 - v1.1.5
 	- fixed a bug where selecting other saves in the save menu can reset storage multithreading info
-- v1.1.4
-	- fixed a bug where multithreading didn't work properly for PLSs. re-enabled storage multithreading
-- v1.1.3
-	- temporarily disabled the storage multithreading because of potential mod compatibility issues
-- v1.1.2
-	- added multithreading for station storage logic
-- v1.1.1
-	- improved fps for dense spheres by optimizing shell rendering
-	- reduced lag caused by shader buffers being synced when a hidden layer is under construction
-- v1.1.0
-	- optimized dyson node logic
-- v1.0.6
-	- Removed the low resolution shells feature
+
+Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).
