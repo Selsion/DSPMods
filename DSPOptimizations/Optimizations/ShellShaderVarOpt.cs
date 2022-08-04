@@ -102,6 +102,33 @@ namespace DSPOptimizations
 
                 return matcher.InstructionEnumeration();
             }
+
+            // skips drawing a shell if it has no CPs. normally you'd see green in the editor for empty shells. maybe do this when not in the editor? TODO
+            /*[HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereSegmentRenderer), nameof(DysonSphereSegmentRenderer.DrawModels))]
+            static IEnumerable<CodeInstruction> DysonSphereSegmentRenderer_DrawModels_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            {
+                CodeMatcher matcher = new CodeMatcher(instructions, generator);
+
+                matcher.MatchForward(false, new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphereLayer), nameof(DysonSphereLayer.shellPool))));
+                matcher.Advance(4);
+                OpCode shellOpCode = matcher.Opcode;
+                var shellOperand = matcher.Operand;
+                matcher.Advance(5);
+                var label = matcher.Operand;
+
+                matcher.Advance(1).InsertAndAdvance(
+                    new CodeInstruction(shellOpCode, shellOperand),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(DysonShell), nameof(DysonShell.nodecps))),
+                    new CodeInstruction(OpCodes.Dup),
+                    new CodeInstruction(OpCodes.Ldlen),
+                    new CodeInstruction(OpCodes.Ldc_I4_1),
+                    new CodeInstruction(OpCodes.Sub),
+                    new CodeInstruction(OpCodes.Ldelem_I4),
+                    new CodeInstruction(OpCodes.Brfalse, label)
+                );
+
+                return matcher.InstructionEnumeration();
+            }*/
         }
     }
 }

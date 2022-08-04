@@ -1,3 +1,8 @@
+- v1.1.11
+	- further optimized dyson node logic, where buffer updates won't be run for invisible swarms
+	- updated factory reset command to work with latest DSP update
+- v1.1.10
+	- updated station multithreading for compatibility with v0.9.26 of DSP
 - v1.1.9
 	- fixed vanilla bug where splitters and pilers may have their performance stats counted twice for the last factory
 	- fixed bug where dyson shell colours aren't updated immediately

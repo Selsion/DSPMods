@@ -65,6 +65,7 @@ namespace DSPOptimizations
             private void ThreadCallback(object state = null)
             {   
                 bool isInput = (bool)state;
+                bool isSandbox = GameMain.sandboxToolsEnabled;
 
                 int chunkSize = (stationIdMap.Length - 1) / numThreads + 1; // rounds up
                 int startIdx = chunkSize * id;
@@ -92,7 +93,11 @@ namespace DSPOptimizations
                         if (isInput)
                             station.UpdateInputSlots(cargoTraffic, entitySignPool);
                         else
+                        {
                             station.UpdateOutputSlots(cargoTraffic, entitySignPool, GameMain.history.stationPilerLevel);
+                            if (isSandbox)
+                                station.UpdateKeepMode();
+                        }
                     }
                 }
 
@@ -174,7 +179,7 @@ namespace DSPOptimizations
                 ).Advance(-14)
                 .RemoveInstructions(3)
                 .SetOpcodeAndAdvance(OpCodes.Nop)
-                .RemoveInstructions(11)
+                .RemoveInstructions(isInput ? 11 : 17)
                 .SetOpcodeAndAdvance(OpCodes.Nop)
                 .RemoveInstructions(3)
                 .SetOpcodeAndAdvance(OpCodes.Nop)

@@ -51,6 +51,30 @@ namespace DSPOptimizations
             }
         }
 
+        private static bool SailsVisible(DysonSphere sphere) // TODO: make a variable for how many nodes are currently absorbing
+        {
+            if (sphere?.swarm == null)
+                return false;
+
+            // check if swarms are hidden
+
+            var data = GameMain.data;
+            var uiGame = UIRoot.instance.uiGame;
+            var dysonEditor = uiGame.dysonEditor;
+
+            switch (DysonSphere.renderPlace)
+            {
+                case ERenderPlace.Universe:
+                    return data.localStar == sphere.starData && sphere.inGameRenderMaskS != 0;
+                case ERenderPlace.Starmap:
+                    return !UIStarmap.isChangingToMilkyWay && uiGame.starmap.viewStarSystem == sphere.starData && sphere.inGameRenderMaskS != 0;
+                case ERenderPlace.Dysonmap:
+                    return dysonEditor.selection.viewDysonSphere == sphere && sphere.inEditorRenderMaskS != 0;
+                default:
+                    return true;
+            }
+        }
+
         class Patch
         {
             [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereLayer), "GameTick")]
@@ -198,7 +222,7 @@ namespace DSPOptimizations
             }
 
             [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphere), "GameTick")]
-            static IEnumerable<CodeInstruction> ColourGameTickPatch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+            static IEnumerable<CodeInstruction> SphereGameTickPatch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
             {
                 CodeMatcher matcher = new CodeMatcher(instructions, generator);
 
@@ -209,6 +233,19 @@ namespace DSPOptimizations
 
                 matcher.Advance(-10).InsertAndAdvance(
                     new CodeInstruction(OpCodes.Br, loopEnd)
+                );
+
+                matcher.MatchForward(false,
+                    new CodeMatch(x => x.LoadsConstant()),
+                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(PerformanceMonitor), nameof(PerformanceMonitor.BeginSample)))
+                ).CreateLabel(out Label end);
+
+                matcher.Start().MatchForward(false,
+                    new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphere), nameof(DysonSphere.nrdPool)))
+                ).Advance(-4).InsertAndAdvance(
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(DysonNodeOpt), nameof(DysonNodeOpt.SailsVisible))),
+                    new CodeInstruction(OpCodes.Brfalse_S, end)
                 );
 
                 return matcher.InstructionEnumeration();

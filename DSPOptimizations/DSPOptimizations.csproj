@@ -77,7 +77,7 @@
     <Compile Include="Optimizations\DysonNodeOpt.cs" />
     <Compile Include="LowResShells\LowResShellsLegacySupport.cs" />
     <Compile Include="OptimizationSet\PatchManager.cs" />
-    <Compile Include="PerformanceStatsFix.cs" />
+    <Compile Include="Fixes\PerformanceStatsFix.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="LowResShells\LowResShellsSaveManager.cs" />
     <Compile Include="OptimizationSet\ConfigValueAttribute.cs" />
@@ -101,7 +101,9 @@
       <Link>.editorconfig</Link>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Optimizations\PowerOptimizations\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) $(ProjectDir)\dist\plugins\$(TargetFileName)</PostBuildEvent>

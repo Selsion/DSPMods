@@ -16,7 +16,7 @@ namespace DSPOptimizations
             Unknown
         }
 
-        private static EResetError resetSwarm(int star_index)
+        private static EResetError ResetSwarm(int star_index)
         {
             DysonSphere sphere = GameMain.data.dysonSpheres[star_index];
             DysonSwarm swarm = sphere?.swarm;
@@ -59,7 +59,7 @@ namespace DSPOptimizations
             if (localStar == null)
                 return "Failed to reset local swarm: No nearby star";
 
-            EResetError err = resetSwarm(localStar.index);
+            EResetError err = ResetSwarm(localStar.index);
             if (err == EResetError.None)
                 return "Successfully reset local swarm";
             else if (err == EResetError.DoesNotExist)

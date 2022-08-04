@@ -1,16 +1,16 @@
 ﻿# DSPOptimizations Mod
 This mod adds optimizations to DSP. Few optimizations are available currently, but more will be added in the future.
 
-## Important Notice
-The low resolution shells optimization is now obsolete with DSP v0.9. If you had lower resolution shells in your save, then the vanilla game will update them incorrectly. As of v1.0.6, this mod should update such modded shells correctly.
+## Important Notice for Old Saves
+The low resolution shells optimization is now obsolete with DSP v0.9. If you had lower resolution shells in your save made with this mod in an old version of the game, then the vanilla game will update them incorrectly. As of v1.0.6, this mod should update such modded shells correctly.
 
 ## Features
 - Dense spheres with shells now impact the game's framerate much less
 	- e.g. the framerate with a single sphere layer with 5240 shells with the game paused went from 8 fps to 24 fps
 - Multithreading is added for the logic controlling belts going in and out of stations
 	- this should greatly reduce the CPU time under the "Storage" category in the performance window
-- Ejected sails will impact UPS much less (~30%) when not visible. You can choose to always hide them in the config
-- Dyson node logic has been optimized to take 20% as long
+- Ejected sails will impact UPS much less (~15%) when not visible. You can choose to always hide them in the config
+- Most of the lag from dyson node game logic has been eliminated
 - Hidden sphere layers under construction cause less lag
 - Shadows can be disabled in the config
 
@@ -48,11 +48,11 @@ This mod depends on [DSPModSave](https://dsp.thunderstore.io/package/CommonAPI/D
 This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunderstore.io/package/nebula/NebulaMultiplayerModApi/), however compatibility will be added in the future.
 
 ## Planned Optimizations
-- [ ] Dyson Node Logic
+- [x] Dyson Node Logic
 	- [x] Store CP and SP counts for each layer to avoid recomputing them for each tick
 	- [x] Skip checking nodes that aren't being updated on a tick
-	- [ ] Change the relevant compute shader to reference a single rotation variable, rather than a copy for each node
-	- [ ] Skip updating the node colours on each tick, and instead update them on change
+	- [x] Skip updating node rotation info for the compute shader when the swarm isn't visible
+	- [x] Skip updating the node colours on each tick, and instead update them on change
 - [ ] Dyson spheres
 	- [ ] Improve fps by batching shell draw calls
 	- [x] Improve fps by updating shader variables only when changed
@@ -95,6 +95,11 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.11
+	- further optimized dyson node logic, where buffer updates won't be run for invisible swarms
+	- updated factory reset command to work with latest DSP update
+- v1.1.10
+	- updated station multithreading for compatibility with v0.9.26 of DSP
 - v1.1.9
 	- fixed vanilla bug where splitters and pilers may have their performance stats counted twice for the last factory
 	- fixed bug where dyson shell colours aren't updated immediately
@@ -104,10 +109,5 @@ If you have any bugs or issues to report, then either contact me on discord at S
 	- optimized dyson nodes to not update their colour on tick. should further improve ups for dense spheres
 - v1.1.7
 	- added optimization for ejected sails along with the option to hide them
-- v1.1.6
-	- added a compatibility fix for the black box mod
-	- added factory, swarm, and sphere reset commands
-- v1.1.5
-	- fixed a bug where selecting other saves in the save menu can reset storage multithreading info
 
 Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).
