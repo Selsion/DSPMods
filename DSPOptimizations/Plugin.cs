@@ -20,7 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.1.11";
+        public const string MOD_VERSION = "1.1.15";
 
         private static Harmony harmony;
         public static ManualLogSource logger;

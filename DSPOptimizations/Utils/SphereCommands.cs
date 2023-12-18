@@ -83,7 +83,7 @@ namespace DSPOptimizations
             if (sphere == null)
                 return "Failed to reset local sphere layer: sphere does not exist";
 
-            if (!int.TryParse(param, out int id) || id < 1 || id > sphere.layerCount)
+            if (!int.TryParse(param, out int id) || id < 1 || id > 10)
                 return "Failed to reset local sphere layer: invalid layer id";
 
             var layer = sphere.layersIdBased[id];

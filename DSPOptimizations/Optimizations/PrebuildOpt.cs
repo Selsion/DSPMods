@@ -15,7 +15,7 @@ namespace DSPOptimizations
         class Patch
         {
             // TODO: fix all the references to the IDs
-            [HarmonyPrefix]
+            /*[HarmonyPrefix]
             [HarmonyPatch(typeof(PlanetFactory), nameof(PlanetFactory.Export))]
             public static void PrebuildOpt_Import_Postfix(PlanetFactory __instance)
             {
@@ -37,7 +37,7 @@ namespace DSPOptimizations
                 while (__instance.prebuildCursor > newCapacity)
                     newCapacity *= 2;
                 __instance.SetPrebuildCapacity(newCapacity);
-            }
+            }*/
         }
     }
 }

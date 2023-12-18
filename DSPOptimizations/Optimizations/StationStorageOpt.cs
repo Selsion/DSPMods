@@ -85,16 +85,18 @@ namespace DSPOptimizations
                     var factory = GameMain.data.factories[factoryIdx];
                     var station = factory.transport.stationPool[localStationIdx];
 
-                    if(station != null && station.id == localStationIdx)
+                    bool active = (GameMain.instance.timei + factoryIdx) % 30L == 0L || factory.planet == GameMain.data.localPlanet;
+
+                    if (station != null && station.id == localStationIdx)
                     {
                         CargoTraffic cargoTraffic = factory.cargoTraffic;
                         SignData[] entitySignPool = factory.entitySignPool;
 
                         if (isInput)
-                            station.UpdateInputSlots(cargoTraffic, entitySignPool);
+                            station.UpdateInputSlots(cargoTraffic, entitySignPool, active);
                         else
                         {
-                            station.UpdateOutputSlots(cargoTraffic, entitySignPool, GameMain.history.stationPilerLevel);
+                            station.UpdateOutputSlots(cargoTraffic, entitySignPool, GameMain.history.stationPilerLevel, active);
                             if (isSandbox)
                                 station.UpdateKeepMode();
                         }
@@ -176,10 +178,10 @@ namespace DSPOptimizations
 
                 matcher.MatchForward(false,
                     new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(PlanetTransport), methodName))
-                ).Advance(-14)
-                .RemoveInstructions(3)
+                ).Advance(isInput ? -15 : -19) // was -14
+                .RemoveInstructions(isInput ? 3 : 6) // was 3
                 .SetOpcodeAndAdvance(OpCodes.Nop)
-                .RemoveInstructions(isInput ? 11 : 17)
+                .RemoveInstructions(isInput ? 12 : 19) // was 11, 17
                 .SetOpcodeAndAdvance(OpCodes.Nop)
                 .RemoveInstructions(3)
                 .SetOpcodeAndAdvance(OpCodes.Nop)

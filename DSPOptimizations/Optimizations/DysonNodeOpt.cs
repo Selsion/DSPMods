@@ -212,16 +212,17 @@ namespace DSPOptimizations
                 return matcher.InstructionEnumeration();
             }
 
-            [HarmonyPostfix]
-            [HarmonyPatch(typeof(DysonSphere), "AddDysonNodeRData")]
-            [HarmonyPatch(typeof(DysonSphere), "UpdateColor", new[] { typeof(DysonNode) })]
+            //[HarmonyPostfix]
+            //[HarmonyPatch(typeof(DysonSphere), "AddDysonNodeRData")]
+            //[HarmonyPatch(typeof(DysonSphere), "UpdateColor", new[] { typeof(DysonNode) })]
             public static void UpdateColourPostfix(DysonSphere __instance, DysonNode node)
             {
                 Color.RGBToHSV(node.color, out float x, out float y, out float z);
                 __instance.nrdPool[node.rid].color = new Vector4(x, y, z, node.color.a);
             }
 
-            [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphere), "GameTick")]
+            // TODO: check compatibility with dark fog update. the devs removed the colour updating code, so this is probably obsolete
+            //[HarmonyTranspiler, HarmonyPatch(typeof(DysonSphere), "GameTick")]
             static IEnumerable<CodeInstruction> SphereGameTickPatch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
             {
                 CodeMatcher matcher = new CodeMatcher(instructions, generator);

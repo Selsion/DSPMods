@@ -78,6 +78,13 @@
     <Compile Include="LowResShells\LowResShellsLegacySupport.cs" />
     <Compile Include="OptimizationSet\PatchManager.cs" />
     <Compile Include="Fixes\PerformanceStatsFix.cs" />
+    <Compile Include="Optimizations\EntityNeedsOpt.cs" />
+    <Compile Include="Optimizations\LayerDismantleOpt.cs" />
+    <Compile Include="Optimizations\MonitorOpt.cs" />
+    <Compile Include="Optimizations\PowerOptimizations\ChargerOpt.cs" />
+    <Compile Include="Optimizations\PowerOptimizations\PCStateOpt.cs" />
+    <Compile Include="Optimizations\PowerOptimizations\ReceiverOpt.cs" />
+    <Compile Include="Optimizations\ShipRendererOpt.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="LowResShells\LowResShellsSaveManager.cs" />
     <Compile Include="OptimizationSet\ConfigValueAttribute.cs" />
@@ -101,9 +108,7 @@
       <Link>.editorconfig</Link>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Optimizations\PowerOptimizations\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y $(TargetPath) $(ProjectDir)\dist\plugins\$(TargetFileName)</PostBuildEvent>

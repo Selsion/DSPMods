@@ -1,5 +1,5 @@
 ﻿# DSPOptimizations Mod
-This mod adds optimizations to DSP. Few optimizations are available currently, but more will be added in the future.
+This mod adds various optimizations to DSP. This is an ongoing project with more optimizations occasionally being added. The mod does not alter gameplay, does not disable achievements, and can be enabled/disabled anytime.
 
 ## Important Notice for Old Saves
 The low resolution shells optimization is now obsolete with DSP v0.9. If you had lower resolution shells in your save made with this mod in an old version of the game, then the vanilla game will update them incorrectly. As of v1.0.6, this mod should update such modded shells correctly.
@@ -95,19 +95,17 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.15
+	- removed dyson colour optmization for compatibility with v0.10 of DSP
+- v1.1.14
+	- removed prototype code that should have been disabled. this might fix the bug where assemblers don't always run when they should
+- v1.1.13
+	- optimized monitor logic
+- v1.1.12
+	- updated station multithreading for compatibility with v0.9.27 of DSP
+	- optimized the dismantling of dense spheres
 - v1.1.11
 	- further optimized dyson node logic, where buffer updates won't be run for invisible swarms
 	- updated factory reset command to work with latest DSP update
-- v1.1.10
-	- updated station multithreading for compatibility with v0.9.26 of DSP
-- v1.1.9
-	- fixed vanilla bug where splitters and pilers may have their performance stats counted twice for the last factory
-	- fixed bug where dyson shell colours aren't updated immediately
-- v1.1.8
-	- further optimization ejected sails down to ~15% of normal cpu time
-	- fixed bug with swarm gpu stats
-	- optimized dyson nodes to not update their colour on tick. should further improve ups for dense spheres
-- v1.1.7
-	- added optimization for ejected sails along with the option to hide them
 
 Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).

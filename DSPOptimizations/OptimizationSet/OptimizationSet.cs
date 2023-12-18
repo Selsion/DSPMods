@@ -10,7 +10,7 @@ namespace DSPOptimizations
 {
     public abstract class OptimizationSet
     {
-        protected bool enabled = false; // TODO: what about mod saves when this is disabled?
+        protected bool enabled = true; // TODO: what about mod saves when this is disabled?
 
         public virtual void Init(BaseUnityPlugin plugin)
         {

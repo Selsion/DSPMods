@@ -14,7 +14,7 @@ namespace DSPOptimizations
     {
         class Patch
         {
-            [HarmonyPostfix]
+            //[HarmonyPostfix]
             [HarmonyPatch(typeof(DysonShell), nameof(DysonShell.GenerateModelObjects))]
             public static void ShellMatInitPostfix(DysonShell __instance)
             {
