@@ -95,6 +95,8 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.16
+	- fixed bug with calculating sphere power
 - v1.1.15
 	- removed dyson colour optmization for compatibility with v0.10 of DSP
 - v1.1.14
@@ -104,8 +106,5 @@ If you have any bugs or issues to report, then either contact me on discord at S
 - v1.1.12
 	- updated station multithreading for compatibility with v0.9.27 of DSP
 	- optimized the dismantling of dense spheres
-- v1.1.11
-	- further optimized dyson node logic, where buffer updates won't be run for invisible swarms
-	- updated factory reset command to work with latest DSP update
 
 Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).

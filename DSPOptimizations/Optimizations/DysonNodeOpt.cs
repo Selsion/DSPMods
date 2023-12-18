@@ -174,10 +174,13 @@ namespace DSPOptimizations
 
                 // find the last line that we need to jump to
                 matcher.MatchForward(false,
-                    new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(DysonSphereLayer), "get_energyGenCurrentTick")),
-                    new CodeMatch(OpCodes.Add),
+                    new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(DysonSphereLayer), "set_energyGenCurrentTick")),
+                    new CodeMatch(OpCodes.Ldarg_0),
+                    new CodeMatch(OpCodes.Ldarg_0)
+                );
+                matcher.MatchForward(false,
                     new CodeMatch(OpCodes.Stfld, AccessTools.Field(typeof(DysonSphere), nameof(DysonSphere.energyGenCurrentTick)))
-                ).Advance(-4);
+                ).Advance(1);
                 matcher.CreateLabel(out Label end);
 
                 // find the first line that we need to skip
@@ -197,6 +200,7 @@ namespace DSPOptimizations
                     Transpilers.EmitDelegate<Action<DysonSphere, DysonSphereLayer>>((DysonSphere sphere, DysonSphereLayer layer) =>
                     {
                         layer.energyGenCurrentTick = layer.totalNodeSP * sphere.energyGenPerNode + layer.totalFrameSP * sphere.energyGenPerFrame + layer.totalCP * sphere.energyGenPerShell;
+                        sphere.energyGenCurrentTick += layer.energyGenCurrentTick;
                     }),
                     new CodeInstruction(OpCodes.Br, end)
                 ).CreateLabel(out Label start);

@@ -1,3 +1,5 @@
+- v1.1.16
+	- fixed bug with calculating sphere power
 - v1.1.15
 	- removed dyson colour optmization for compatibility with v0.10 of DSP
 - v1.1.14
