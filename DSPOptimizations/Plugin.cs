@@ -14,13 +14,13 @@ using crecheng.DSPModSave;
 namespace DSPOptimizations
 {
     [BepInPlugin(MOD_GUID, MOD_NAME, MOD_VERSION)]
-    [BepInProcess("DSPGAME.exe")]
+    //[BepInProcess("DSPGAME.exe")]
     [BepInDependency("crecheng.DSPModSave")]
     public class Plugin : BaseUnityPlugin, IModCanSave
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.1.16";
+        public const string MOD_VERSION = "1.1.17";
 
         private static Harmony harmony;
         public static ManualLogSource logger;
