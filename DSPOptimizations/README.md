@@ -92,6 +92,8 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.18
+	- removed obsolete optimization for dyson node sail absorption update code
 - v1.1.17
 	- fixed bug introduced by recent DSP update v0.10.30
 	- fixed issue where a process filter may prevent the mod from working with an Xbox Game Pass version of DSP
@@ -101,7 +103,5 @@ If you have any bugs or issues to report, then either contact me on discord at S
 	- removed dyson colour optmization for compatibility with v0.10 of DSP
 - v1.1.14
 	- removed prototype code that should have been disabled. this might fix the bug where assemblers don't always run when they should
-- v1.1.13
-	- optimized monitor logic
 
 Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).

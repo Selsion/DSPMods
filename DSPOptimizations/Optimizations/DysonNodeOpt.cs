@@ -77,7 +77,9 @@ namespace DSPOptimizations
 
         class Patch
         {
-            [HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereLayer), "GameTick")]
+            // obsolete in v0.10.31.24632 of DSP
+            // this optimization was done by the devs when the sail absorption upgrade was introduced
+            /*[HarmonyTranspiler, HarmonyPatch(typeof(DysonSphereLayer), "GameTick")]
             static IEnumerable<CodeInstruction> NodeIterSkipPatch(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
             {
                 CodeMatcher matcher = new CodeMatcher(instructions, generator);
@@ -113,7 +115,7 @@ namespace DSPOptimizations
                 );
 
                 return matcher.InstructionEnumeration();
-            }
+            }*/
 
             [HarmonyPostfix]
             [HarmonyPatch(typeof(DysonSphere), "UpdateProgress", new[] { typeof(DysonNode) })]

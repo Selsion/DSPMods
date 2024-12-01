@@ -1,3 +1,5 @@
+- v1.1.18
+	- removed obsolete optimization for dyson node sail absorption update code
 - v1.1.17
 	- fixed bug introduced by recent DSP update v0.10.30
 	- fixed issue where a process filter may prevent the mod from working with an Xbox Game Pass version of DSP
