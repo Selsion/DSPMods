@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DSPOptimizations
 {
-    [RunPatches(typeof(Patch))]
+    /*[RunPatches(typeof(Patch))]
     [Optimization("StationStorageOpt", "Adds multithreading to station storage logic", false, new Type[] { })]
     class StationStorageOpt : OptimizationSet
     {
@@ -74,9 +74,9 @@ namespace DSPOptimizations
                 for (int i = startIdx; i < endIdx; i++)
                 {
                     int flattenedId = stationIdMap[i];
-                    /*int factoryIdx = Array.BinarySearch(factorySizesPrefixSum, flattenedId + 1);
-                    if (factoryIdx < 0)
-                        factoryIdx = ~factoryIdx;*/
+                    //int factoryIdx = Array.BinarySearch(factorySizesPrefixSum, flattenedId + 1);
+                    //if (factoryIdx < 0)
+                    //    factoryIdx = ~factoryIdx;
                     int factoryIdx = Utils.LowerBound(factorySizesPrefixSum, flattenedId + 1, 0, GameMain.data.factoryCount);
                     int localStationIdx = flattenedId - (factoryIdx > 0 ? factorySizesPrefixSum[factoryIdx - 1] : 0);
 
@@ -131,46 +131,46 @@ namespace DSPOptimizations
                     factorySizesPrefixSum[i] = (i > 0 ? factorySizesPrefixSum[i - 1] : 0) + factorySizes[i];
             }
 
-            /*[HarmonyPrefix, HarmonyPatch(typeof(GameData), nameof(GameData.NewGame))]
-            public static void InitIdMapPatch1(GameDesc _gameDesc)
-            {
-                factorySizes = new int[_gameDesc.starCount * 6];
-                factorySizesPrefixSum = new int[_gameDesc.starCount * 6];
-                stationIdMap = new int[0];
-            }
+            //[HarmonyPrefix, HarmonyPatch(typeof(GameData), nameof(GameData.NewGame))]
+            //public static void InitIdMapPatch1(GameDesc _gameDesc)
+            //{
+            //    factorySizes = new int[_gameDesc.starCount * 6];
+            //    factorySizesPrefixSum = new int[_gameDesc.starCount * 6];
+            //    stationIdMap = new int[0];
+            //}
 
-            [HarmonyPostfix, HarmonyPatch(typeof(GameDesc), nameof(GameDesc.Import))]
-            public static void InitIdMapPatch2(GameDesc __instance)
-            {
-                factorySizes = new int[__instance.starCount * 6];
-                factorySizesPrefixSum = new int[__instance.starCount * 6];
-                stationIdMap = new int[0];
-            }*/
+            //[HarmonyPostfix, HarmonyPatch(typeof(GameDesc), nameof(GameDesc.Import))]
+            //public static void InitIdMapPatch2(GameDesc __instance)
+            //{
+            //    factorySizes = new int[__instance.starCount * 6];
+            //    factorySizesPrefixSum = new int[__instance.starCount * 6];
+            //    stationIdMap = new int[0];
+            //}
 
-            /*[HarmonyPostfix]
-            [HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.Arragement))]
-            [HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.Init))]
-            public static void ShuffleMapPostfix(GalacticTransport __instance)
-            {
-                stationIdMap.Shuffle(__instance.stationCursor);
-            }
+            //[HarmonyPostfix]
+            //[HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.Arragement))]
+            //[HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.Init))]
+            //public static void ShuffleMapPostfix(GalacticTransport __instance)
+            //{
+            //    stationIdMap.Shuffle(__instance.stationCursor);
+            //}
 
-            [HarmonyPrefix]
-            [HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.AddStationComponent))]
-            public static void AddStationPrefix(GalacticTransport __instance, ref int __state)
-            {
-                __state = __instance.stationCapacity;
-            }
+            //[HarmonyPrefix]
+            //[HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.AddStationComponent))]
+            //public static void AddStationPrefix(GalacticTransport __instance, ref int __state)
+            //{
+            //    __state = __instance.stationCapacity;
+            //}
 
-            [HarmonyPostfix]
-            [HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.AddStationComponent))]
-            public static void AddStationPostfix(GalacticTransport __instance, ref int __state)
-            {
-                if (__state != __instance.stationCapacity)
-                    stationIdMap.Shuffle(__instance.stationCursor);
-                else
-                    stationIdMap.RandomPrefixSwap(__instance.stationCursor - 1);
-            }*/
+            //[HarmonyPostfix]
+            //[HarmonyPatch(typeof(GalacticTransport), nameof(GalacticTransport.AddStationComponent))]
+            //public static void AddStationPostfix(GalacticTransport __instance, ref int __state)
+            //{
+            //    if (__state != __instance.stationCapacity)
+            //        stationIdMap.Shuffle(__instance.stationCursor);
+            //    else
+            //        stationIdMap.RandomPrefixSwap(__instance.stationCursor - 1);
+            //}
 
             private static void ReplaceCall(CodeMatcher matcher, bool isInput)
             {
@@ -229,5 +229,5 @@ namespace DSPOptimizations
                 numThreads = __instance.usedThreadCnt;
             }
         }
-    }
+    }*/
 }

@@ -117,6 +117,17 @@ namespace DSPOptimizations
                 return matcher.InstructionEnumeration();
             }*/
 
+            // for whatever reason, InitSPAndCPCounts was called using the DSPModSave interface functions "IntoOtherSave" and "Import",
+            // so it's been changed to be called after the same methods that DSPModSave patches
+            [HarmonyPostfix]
+            [HarmonyAfter("crecheng.DSPModSave")]
+            [HarmonyPatch(typeof(GameData), "NewGame")]
+            [HarmonyPatch(typeof(GameSave), "LoadCurrentGame")]
+            public static void InitCounts()
+            {
+                InitSPAndCPCounts();
+            }
+
             [HarmonyPostfix]
             [HarmonyPatch(typeof(DysonSphere), "UpdateProgress", new[] { typeof(DysonNode) })]
             public static void DysonSphere_UpdateProgress_Postfix1(DysonSphere __instance, DysonNode node)
@@ -233,23 +244,28 @@ namespace DSPOptimizations
             {
                 CodeMatcher matcher = new CodeMatcher(instructions, generator);
 
-                matcher.MatchForward(false,
-                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(DysonSphere), nameof(DysonSphere.FindNode)))
-                ).Advance(3);
-                Label loopEnd = (Label)matcher.Operand;
+                // note: this was for skipping setting the colour info in the node buffer
+                //matcher.MatchForward(false,
+                //    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(DysonSphere), nameof(DysonSphere.FindNode)))
+                //).Advance(3);
+                //Label loopEnd = (Label)matcher.Operand;
 
-                matcher.Advance(-10).InsertAndAdvance(
-                    new CodeInstruction(OpCodes.Br, loopEnd)
-                );
+                //matcher.Advance(-10).InsertAndAdvance(
+                //    new CodeInstruction(OpCodes.Br, loopEnd)
+                //);
 
                 matcher.MatchForward(false,
                     new CodeMatch(x => x.LoadsConstant()),
-                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(PerformanceMonitor), nameof(PerformanceMonitor.BeginSample)))
+                    //new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(PerformanceMonitor), nameof(PerformanceMonitor.BeginSample)))
+                    // the updated IL code is shown below. it came after the performance monitor code changed
+                    new CodeMatch(x => x.LoadsConstant()),
+                    new CodeMatch(OpCodes.Conv_I8),
+                    new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(DeepProfiler), nameof(DeepProfiler.EndSample)))
                 ).CreateLabel(out Label end);
 
                 matcher.Start().MatchForward(false,
                     new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(DysonSphere), nameof(DysonSphere.nrdPool)))
-                ).Advance(-4).InsertAndAdvance(
+                ).Advance(-6).InsertAndAdvance(
                     new CodeInstruction(OpCodes.Ldarg_0),
                     new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(DysonNodeOpt), nameof(DysonNodeOpt.SailsVisible))),
                     new CodeInstruction(OpCodes.Brfalse_S, end)

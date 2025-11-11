@@ -11,7 +11,10 @@ using UnityEngine;
 
 namespace DSPOptimizations
 {
-	[RunPatches(typeof(Patch))]
+	// this code was disabled when the swarm expiration and absorption code changed
+	// TODO: consider if it's possible to adapt the code, and if it's even still needed
+	// TODO: analyze the buffer usage in DysonSwarm.RemoveSolarSail()
+	/*[RunPatches(typeof(Patch))]
 	[Optimization("SailBulletOpt", "Optimizes logic for ejected sails", false, new Type[] { })]
 	class SailBulletOpt : OptimizationSet
     {
@@ -135,5 +138,5 @@ namespace DSPOptimizations
 				return matcher.InstructionEnumeration();
 			}
 		}
-    }
+    }*/
 }

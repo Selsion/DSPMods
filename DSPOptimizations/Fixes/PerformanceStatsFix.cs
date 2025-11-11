@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DSPOptimizations
 {
 
-    [RunPatches(typeof(Patch))]
+    /*[RunPatches(typeof(Patch))]
     class PerformanceStatsFix
     {
         class Patch
@@ -36,7 +36,7 @@ namespace DSPOptimizations
                     new CodeMatch(OpCodes.Ldc_I4_S, (sbyte)ECpuWorkEntry.Belt),
                     new CodeMatch(OpCodes.Call, beginMethod)
                 ).RemoveInstructions(2);
-
+                    
                 matcher.MatchForward(false,
                     new CodeMatch(OpCodes.Ldc_I4_S, (sbyte)ECpuWorkEntry.Belt),
                     new CodeMatch(OpCodes.Call, endMethod)
@@ -45,5 +45,5 @@ namespace DSPOptimizations
                 return matcher.InstructionEnumeration();
             }
         }
-    }
+    }*/
 }

@@ -14,10 +14,20 @@ namespace DSPOptimizations
         {
             var assm = Assembly.GetExecutingAssembly();
             foreach (var type in assm.GetTypes())
-                //if (type.IsSubclassOf(typeof(OptimizationSet)))
-                    foreach(var attr in type.GetCustomAttributes())
-                        if(attr is RunPatchesAttribute)
-                            harmony.PatchAll((attr as RunPatchesAttribute).Patches);
+            {
+                try
+                {
+                    //if (type.IsSubclassOf(typeof(OptimizationSet)))
+                    foreach (var attr in type.GetCustomAttributes())
+                        if (attr is RunPatchesAttribute)
+                            //if ((attr as RunPatchesAttribute).IsEnabled())
+                                harmony.PatchAll((attr as RunPatchesAttribute).Patches);
+                }
+                catch(Exception e)
+                {
+                    Plugin.logger.LogError("PatchManager error: " + type.Name + "\n" + e.StackTrace);
+                }
+            }
         }
     }
 }

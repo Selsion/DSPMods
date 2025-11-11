@@ -20,7 +20,7 @@ namespace DSPOptimizations
     {
         public const string MOD_GUID = "com.Selsion.DSPOptimizations";
         public const string MOD_NAME = "DSPOptimizations";
-        public const string MOD_VERSION = "1.1.18";
+        public const string MOD_VERSION = "1.1.19";
 
         private static Harmony harmony;
         public static ManualLogSource logger;
@@ -69,10 +69,10 @@ namespace DSPOptimizations
         // TODO: what if LowResShells isn't even enabled? we don't want to discard low res shell data, in case they enable it again
         void IModCanSave.Export(BinaryWriter w)
         {
-            /*int version = 1;
-            w.Write(version);
+            //int version = 1;
+            //w.Write(version);
 
-            LowResShellsSaveManager.ExportWrapper(w);*/
+            //LowResShellsSaveManager.ExportWrapper(w);
 
             int version = 2;
             w.Write(version);
@@ -88,7 +88,7 @@ namespace DSPOptimizations
             }
 
             LowResShellsLegacySupport.UpdateShells();
-            DysonNodeOpt.InitSPAndCPCounts();
+            //DysonNodeOpt.InitSPAndCPCounts();
         }
 
         void IModCanSave.IntoOtherSave()
@@ -98,7 +98,7 @@ namespace DSPOptimizations
             // regen existing geo?
 
             LowResShellsLegacySupport.UpdateShells();
-            DysonNodeOpt.InitSPAndCPCounts();
+            //DysonNodeOpt.InitSPAndCPCounts();
 
             if (DSPGame.IsMenuDemo)
                 return;

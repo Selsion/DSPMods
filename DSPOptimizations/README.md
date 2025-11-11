@@ -92,6 +92,11 @@ This mod is most likely not compatible with the [Nebula Mod](https://dsp.thunder
 If you have any bugs or issues to report, then either contact me on discord at Selsion#0769, or raise an issue on this github page.
 
 ## Changelog
+- v1.1.19
+	- removed multithreading of belts connected to logistics stations, since that was added in the vanilla game
+	- disabled optimization for ejected sails
+	- removed a performance stats fix that was outdated and causing an error
+	- fixed a dyson node optimization to work with the latest version
 - v1.1.18
 	- removed obsolete optimization for dyson node sail absorption update code
 - v1.1.17
@@ -101,7 +106,5 @@ If you have any bugs or issues to report, then either contact me on discord at S
 	- fixed bug with calculating sphere power
 - v1.1.15
 	- removed dyson colour optmization for compatibility with v0.10 of DSP
-- v1.1.14
-	- removed prototype code that should have been disabled. this might fix the bug where assemblers don't always run when they should
 
 Older version changes may be found [here](https://github.com/Selsion/DSPMods/blob/main/DSPOptimizations/changelog.txt).

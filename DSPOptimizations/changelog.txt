@@ -1,3 +1,8 @@
+- v1.1.19
+	- removed multithreading of belts connected to logistics stations, since that was added in the vanilla game
+	- disabled optimization for ejected sails
+	- removed a performance stats fix that was outdated and causing an error
+	- fixed a dyson node optimization to work with the latest version
 - v1.1.18
 	- removed obsolete optimization for dyson node sail absorption update code
 - v1.1.17
